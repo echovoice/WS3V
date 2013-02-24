@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS3V", "WS3V\WS3V.csproj", "{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fleck", "Fleck\src\Fleck\Fleck.csproj", "{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChatRoom", "Samples\ChatRoom\ChatRoom.csproj", "{290BFDA7-93DB-4C1F-9889-8EF74352C965}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +17,14 @@ Global
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
