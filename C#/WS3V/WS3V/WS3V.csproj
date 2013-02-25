@@ -32,6 +32,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -40,6 +41,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="JSON\JSONDecoders.cs" />
+    <Compile Include="JSON\JSONEncoders.cs" />
+    <Compile Include="MessageTypes\terminated.cs" />
+    <Compile Include="MessageTypes\farewell.cs" />
+    <Compile Include="MessageTypes\error.cs" />
+    <Compile Include="MessageTypes\receive.cs" />
+    <Compile Include="MessageTypes\send.cs" />
+    <Compile Include="MessageTypes\recover.cs" />
+    <Compile Include="MessageTypes\howdy .cs" />
+    <Compile Include="MessageTypes\signature .cs" />
+    <Compile Include="MessageTypes\gatekeeper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
