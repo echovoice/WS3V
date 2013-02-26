@@ -1,0 +1,46 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>websocket client</title>
+</head>
+<body>
+	<form id="sendForm">
+		<input id="sendText" placeholder="Text to send" />
+	</form>
+    <pre id="incomming"></pre>
+    <script src="../../WS3V/websocket.js"></script>
+    
+    <!-- Debug Mode Requires the Following Styles and Scripts -->
+    <link rel="stylesheet" href="../../WS3V/debug-assets/css/styles.css">
+    <script src="../../WS3V/debug-assets/vkbeautify/vkbeautify.js"></script>
+    <!-- End Debug Required -->
+    
+    <script>
+		RESTfulAPI = new WS3VWebSocket
+		({ 
+			Server: "127.0.0.1",
+			Port: 8181,
+			Action: "RESTfulAPI",
+			Credentials: ["98eac98feeaf8e25410ce135076d688a"],
+			DebugMode: true
+		});
+		
+		RESTfulAPI.Connected = function()
+		{
+			console.log("connected");
+		};
+		
+		RESTfulAPI.Disconnected = function()
+		{
+			console.log("disconnected");
+		};
+		
+		RESTfulAPI.MessageReceived = function(event)
+		{
+			//ParseResponse(event.data);
+		};
+		
+		RESTfulAPI.Start();
+</script>
+</body>
+</html>
