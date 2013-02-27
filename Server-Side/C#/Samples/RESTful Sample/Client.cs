@@ -57,9 +57,12 @@ namespace RESTful_Sample
                     return;
 
                 if (!authenticated)
+                {
                     send_terminated(403, "Forbidden", "http://example.com/api/error#403");
+                    return;
+                }
 
-                else if (!beat)
+                if (!beat)
                     send_terminated(408, "Request Timeout", "http://example.com/api/error#408");
 
                 beat = false;
@@ -96,13 +99,23 @@ namespace RESTful_Sample
         public void check_signature(string[] message)
         {
             if (message.Length == 2 && !string.IsNullOrWhiteSpace(message[1]) && message[1] == api_key)
+            {
                 authenticated = true;
-            else if(max_auths > 0)
+                send_howdy();
+            }
+            else if (max_auths > 0)
                 send_gatekeeper();
             else
                 send_terminated(403, "Forbidden", "http://example.com/api/error#403");
         }
 
+        public void send_howdy()
+        {
+            // http://ws3v.org/spec.json#howdy
+            howdy h = new howdy(socket.ConnectionInfo.Id.ToString("N"), "Sample RESTful API Demo 0.9.6", 0, heartinterval_max, false, 0, 0);
+            socket.Send(h.ToString());
+        }
+        
         public void send_gatekeeper()
         {
             // http://ws3v.org/spec.json#gatekeeper

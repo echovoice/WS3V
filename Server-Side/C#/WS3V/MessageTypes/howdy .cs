@@ -233,10 +233,16 @@ namespace WS3V.MessageTypes
             sb.Append((force_chunk_integrity) ? "true" : "false");
             sb.Append(',');
             sb.Append((force_file_integrity) ? "true" : "false");
-            sb.Append(',');
-            sb.Append(JSONEncoders.EncodeJsString(max_chunk_size));
-            sb.Append(',');
-            sb.Append(JSONEncoders.EncodeJsString(max_file_size));
+            if (max_chunk_size != null)
+            {
+                sb.Append(',');
+                sb.Append(JSONEncoders.EncodeJsString(max_chunk_size));
+                if (max_file_size != null)
+                {
+                    sb.Append(',');
+                    sb.Append(JSONEncoders.EncodeJsString(max_file_size));
+                }
+            }
             sb.Append(']');
 
             return sb.ToString();

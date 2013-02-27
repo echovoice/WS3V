@@ -67,8 +67,9 @@ window.onload = start;*/
 
   WS3VWebSocket.prototype =
   {
+	  protocol_version: 1,
     _socket: {},
-    _lastReceive: (new Date()).getTime(),
+    latency: -1,
     settings: {},
 
     SocketStates:
@@ -82,6 +83,16 @@ window.onload = start;*/
     SocketState: 3,
 	
 	authenticated: false,
+	
+	session_id: '',
+	
+	heart:
+	{
+		beat:-1,
+		busy:false,
+		lub:null,
+		pacemaker:null
+	},
 
     Start: function()
 	{
@@ -122,20 +133,31 @@ window.onload = start;*/
 		}
     },
 
-    Send: function(data)
+	Send: function(data)
 	{
-      if (typeof data === 'object')
-	  {
-        data = JSON.stringify(data);
-      }
-
-      this._socket.send(data);
-
-      if (this.settings.DebugMode)
-	  {
-        this.Debug(vkbeautify.json(data), 'client');
-      }
-    },
+		if (typeof data === 'object')
+		
+			data = JSON.stringify(data);
+	
+		this._socket.send(data);
+	
+		// we need to check and remove the heartbeat timeouts
+		if(this.heart.beat != -1 && !this.heart.busy)
+		{
+			clearTimeout(this.heart.pacemaker);
+	
+			var that = this;
+			this.heart.pacemaker = 	setTimeout(function()
+			{
+				that.heart.lub = (new Date()).getTime();
+				that.Send("lub");
+			}, that.heart.beat);
+		}
+	
+		if (this.settings.DebugMode)
+		
+			this.Debug((data != 'lub') ? vkbeautify.json(data) : 'lub <3', 'client');
+	},
 
 	Stop: function()
 	{
@@ -164,41 +186,149 @@ window.onload = start;*/
 	{
       var instance = this;
 
-      this._lastReceive = (new Date()).getTime();
+		// check for heartbeat message
+		if(event.data == 'dub')
+		{
+			// this should always be true but just in case
+			if(this.heart.beat != -1)
+			{
+				this.latency = (((new Date()).getTime()) - this.heart.lub);
+				
+				// if we can't always be checking the tunnel pulse then
+				// we need to make sure we are within the interval
+				// otherwise the interval pacemaker should already be alive and kicking
+				if(!this.heart.busy)
+				{
+					var that = this;
+					this.heart.pacemaker = 	setTimeout(function()
+					{
+						that.heart.lub = (new Date()).getTime();
+						that.Send("lub");
+					}, that.heart.beat);
+				}
+				
+				// show debug output
+				if (this.settings.DebugMode)
+				{
+		  			this.Debug('dub <3', 'server');
+					this.Debug('[ws3v diagnostics -> connection latency: ' + this.latency + 'ms]', 'client');
+				}
+			}
+			
+			// no need to go any further
+			return;
+		}
 
       if (this.settings.DebugMode)
 		  this.Debug(vkbeautify.json(event.data), 'server');
 		
 		var data = JSON.parse(event.data);
 		
-		var response = null;
+	
+		// if we are not authenticated then either we need to respond to a gatekeeper
+		// or the message could be the howdy which means we are authorized
 		
-		
-		console.log(data);
-		console.log(data[0]);
-		
-		// this is a gatekeeper request, respond with signature
-		if(!this.authenticated && data[0] == 1)
+		if(!this.authenticated)
 		{
-			response = WS3VWebSocket.prototype.signature;
-			response.credentials = this.settings.Credentials;
+			// this is a gatekeeper request, respond with signature
+			if(data[0] == 1)
+			{
+				var response = WS3VWebSocket.prototype.signature;
+				response.credentials = this.settings.Credentials;
+				this.Send(response.ToString());
+			}
+			
+			// this message is a howdy, meaning the server is ok talking to us
+			else if(data[0] == 3)
+			{
+				// validate server protocol versions match
+				if(this.protocol_version != data[2])
+				{
+					this._OnClose();
+					throw 'UNSUPPORTED: WS3V Protocol Version Mismatch, Client: ' + this.protocol_version + ', Server: ' + data[2];
+					return;
+				}
+				
+				// process howdy message
+				// get session id information
+				this.session_id = data[1];
+				
+				// check if heartbeats are enabled
+				if(data[4][0] >= 0)
+				{
+					// calculate the heartbeat interval
+					// we are using the difference between the low and high
+					// this is very conservative calculation and can be tweeked
+					this.heart.beat = Math.round(Math.abs(data[4][1] - data[4][0]) / 2) * 1000;
+					this.heart.busy = data[4][2];
+					
+					// seems the server doesnt care if we heartbeat at a stead interval
+					// to collect latency diagnostic data.. so lets do it!
+					if(this.heart.busy)
+					{
+						var that = this;
+						this.heart.pacemaker = 	setInterval(function()
+						{
+							that.heart.lub = (new Date()).getTime();
+							that.Send("lub");
+						}, that.heart.beat);
+					}
+					
+					// we need to setup the timeout mode
+					else
+					{
+						var that = this;
+						this.heart.pacemaker = 	setTimeout(function()
+						{
+							that.heart.lub = (new Date()).getTime();
+							that.Send("lub");
+						}, that.heart.beat);
+					}
+				}
+				
+				this.authenticated = true;
+				
+			}
+			
+			// else.... this isnt good, the server might not speak WS3V
+			// so its safe to abort the connection
+			
+			else
+				this._OnClose();
+			
+			// if this is an aux message, meaning the client code needs to communicate directly with the
+			// server, then we dont fire the call back since it never really happened
+			// we should always return at this point
+			return;
 		}
 		
-		if(response != null)
-			this.Send(response.ToString());
-		else
-      		this.MessageReceived(data);
+		
+		
+		
+      	this.MessageReceived(data);
     },
 
-    _OnClose: function()
+	_OnClose: function()
 	{
-      var instance = this;
-      if (this.settings.DebugMode)
-	  	this.Debug('Connection closed.', 'client');
+		var instance = this;
+		
+		if (this.settings.DebugMode)
+			this.Debug('Connection closed.', 'client');
 
-      this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
+		this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
 
-      this.Disconnected();
+		this.Disconnected();
+	  
+		// we need to check and remove the heartbeat intervals
+		if(this.heart.beat != -1)
+		{
+			// clear the timeout or interval
+			if(this.heart.busy)
+				clearInterval(this.heart.pacemaker);
+				
+			else
+				clearTimeout(this.heart.pacemaker);
+		}
     },
 	
 	Debug: function(message, location)

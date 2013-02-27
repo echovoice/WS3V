@@ -8,16 +8,19 @@
 	border-top-width: 1px;
 	border-top-color: #111;
 	border-top-style: solid;
+	resize: vertical;
+	overflow:auto;	
 }
 
 #debugconsole div
 {
 	width: 48%;	
-	height: 250px;
+	height: 100%;
 	float:left;
 	color: #3F3F3F;
 	padding: 1.5em 1em 1.7em;
 	background-color: whiteSmoke;
+	overflow:auto;
 }
 
 #debugconsole #client
