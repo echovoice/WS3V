@@ -1,4 +1,5 @@
 ﻿using Fleck;
+using RESTful_Sample.Music_Playlists;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,8 +27,18 @@ namespace RESTful_Sample
         // obviously this is not how this works server-side, but you knew that
         private const string api_key = "[\"98eac98feeaf8e25410ce135076d688a\"]";
 
+        // again this is NOT how APIs work, but this is how demos work, lets create some dummy static playlist data
+        private Playlist playlist = new Playlist("The Best of Phil Collins", "Collins is one of only three recording artists (along with Paul McCartney and Michael Jackson) who have sold over 100 million albums worldwide");
+
         public Client(IWebSocketConnection socket, int authentication_timeout = 10, int heartinterval_max = 60, int max_auths = 3)
         {
+            // add some of the best songs ever written...
+            playlist.addSong(new Song("Phil Collins", "No Jacket Required", "Sussudio", "http://g-ecx.images-amazon.com/images/G/01/ciu/e5/41/4059c060ada08c928d90e110.L._AA300_.jpg"));
+            playlist.addSong(new Song("Phil Collins", "...Hits", "Another Day In Paradise", "http://ecx.images-amazon.com/images/I/51WRpYh8nNL._SL500_AA280_.jpg"));
+            playlist.addSong(new Song("Phil Collins", "Tarzan [Soundtrack]", "You'll Be In My Heart", "http://ecx.images-amazon.com/images/I/516JGYA351L._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
+            playlist.addSong(new Song("Phil Collins", "Face Value", "In The Air Tonight", "http://ecx.images-amazon.com/images/I/414D91CKFFL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
+            playlist.addSong(new Song("Phil Collins", "Love Songs: A Compilation Old & New", "True Colours", "http://ecx.images-amazon.com/images/I/51Y46K9GYEL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
+
             this.socket = socket;
             this.authentication_timeout = authentication_timeout;
             this.heartinterval_max = heartinterval_max;
@@ -86,14 +97,33 @@ namespace RESTful_Sample
             {
                 switch(message_type)
                 {
+                    // signature response
                     case 2:
                         check_signature(message);
+                        return;
+
+                    // rpc command
+                    case 5:
+                        process_send(message);
                         return;
 
                 }
             }
 
             send_terminated(400, "Bad Request", "http://example.com/api/error#400");
+        }
+
+        public void process_send(string[] message)
+        {
+            // in this demo we only have 3 potential commands
+
+            if (message.Length == 4 && message[2] == "GET" && message[3] == "/user/playlist/bestofphil")
+            {
+                // send the playlist
+                send_receive(message[1], playlist.ToString());
+            }
+            else
+                send_terminated(400, "Bad Request", "http://example.com/api/error#400");
         }
 
         public void check_signature(string[] message)
@@ -109,6 +139,13 @@ namespace RESTful_Sample
                 send_terminated(403, "Forbidden", "http://example.com/api/error#403");
         }
 
+        public void send_receive(string id, string response, string headers = null)
+        {
+            // http://ws3v.org/spec.json#receive
+            receive r = new receive(id, response, headers);
+            socket.Send(r.ToString());
+        }
+        
         public void send_howdy()
         {
             // http://ws3v.org/spec.json#howdy

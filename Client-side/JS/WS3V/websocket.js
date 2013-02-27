@@ -61,9 +61,12 @@ window.onload = start;*/
 
       this.Connected = this.settings.Connected;
       this.Disconnected = this.settings.Disconnected;
-      this.MessageReceived = this.settings.MessageReceived;
     }
+	
+	function send() { }
   }
+  
+  
 
   WS3VWebSocket.prototype =
   {
@@ -86,6 +89,21 @@ window.onload = start;*/
 	
 	session_id: '',
 	
+	message_index: 0,
+	
+	getNext: function ()
+	{
+		var _idchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		var _idlen = 16;
+	   var id = "";
+	   for (var i = 0; i < _idlen; i += 1) {
+		  id += _idchars.charAt(Math.floor(Math.random() * _idchars.length));
+	   }
+	   return id;
+	},
+	
+	message_queue: [],
+	
 	heart:
 	{
 		beat:-1,
@@ -94,7 +112,7 @@ window.onload = start;*/
 		pacemaker:null
 	},
 
-    Start: function()
+    Connect: function()
 	{
       var server = 'ws://' + this.settings.Server + ':' + this.settings.Port + '/' + this.settings.Action;
       var that = this;
@@ -132,8 +150,27 @@ window.onload = start;*/
 			}
 		}
     },
+	
+	Send: function(method, uri, parameters, callback, error)
+	{
+		package = new WS3VWebSocket.prototype.send;
+		package.id = this.getNext();
+		package.method = method;
+		package.uri = uri;
+		package.parameters = parameters;
+		if (callback instanceof Function)
+		{
+			package.callback = callback;
+		}
+		if (error instanceof Function)
+		{
+			package.error = error;
+		}
+		this.message_queue.push(package);
+		this._Send(package.ToString());
+	},
 
-	Send: function(data)
+	_Send: function(data)
 	{
 		if (typeof data === 'object')
 		
@@ -150,7 +187,7 @@ window.onload = start;*/
 			this.heart.pacemaker = 	setTimeout(function()
 			{
 				that.heart.lub = (new Date()).getTime();
-				that.Send("lub");
+				that._Send("lub");
 			}, that.heart.beat);
 		}
 	
@@ -169,7 +206,6 @@ window.onload = start;*/
 
     Connected: function() { },
     Disconnected: function() { },
-    MessageReceived: function() { },
 
     _OnOpen: function()
 	{
@@ -178,12 +214,11 @@ window.onload = start;*/
 
       if (this.settings.DebugMode)
 		  this.Debug('Connected.', 'client');
-
-      this.Connected();
     },
 
     _OnMessage: function(event)
 	{
+
       var instance = this;
 
 		// check for heartbeat message
@@ -203,7 +238,7 @@ window.onload = start;*/
 					this.heart.pacemaker = 	setTimeout(function()
 					{
 						that.heart.lub = (new Date()).getTime();
-						that.Send("lub");
+						that._Send("lub");
 					}, that.heart.beat);
 				}
 				
@@ -235,7 +270,7 @@ window.onload = start;*/
 			{
 				var response = WS3VWebSocket.prototype.signature;
 				response.credentials = this.settings.Credentials;
-				this.Send(response.ToString());
+				this._Send(response.ToString());
 			}
 			
 			// this message is a howdy, meaning the server is ok talking to us
@@ -270,7 +305,7 @@ window.onload = start;*/
 						this.heart.pacemaker = 	setInterval(function()
 						{
 							that.heart.lub = (new Date()).getTime();
-							that.Send("lub");
+							that._Send("lub");
 						}, that.heart.beat);
 					}
 					
@@ -281,13 +316,13 @@ window.onload = start;*/
 						this.heart.pacemaker = 	setTimeout(function()
 						{
 							that.heart.lub = (new Date()).getTime();
-							that.Send("lub");
+							that._Send("lub");
 						}, that.heart.beat);
 					}
 				}
 				
 				this.authenticated = true;
-				
+				this.Connected();
 			}
 			
 			// else.... this isnt good, the server might not speak WS3V
@@ -302,10 +337,40 @@ window.onload = start;*/
 			return;
 		}
 		
-		
-		
-		
-      	this.MessageReceived(data);
+		// so we are authenticated, lets see what the server sent us
+		switch(data[0])
+		{
+			case 6:
+				// this is a RPC response, lets find the message and fire the callback
+				var message = RetrieveMessage(this.message_queue, data[1])
+				
+				console.log(data[1]);
+				
+				// make sure its not null
+				if(typeof message != "undefined")
+				{
+					if (message.callback instanceof Function)
+						message.callback(data[2])
+				}
+				
+			  break;
+			  
+			 case 7:
+				// this is a RPC error response, lets find the message and fire the error callback
+				var message = RetrieveMessage(this.message_queue, data[1])
+				
+				// make sure its not null
+				if(typeof message != "undefined")
+				{
+					if (message.error instanceof Function)
+					
+						message.error(data[2], data[3], data[4])
+				}
+				
+			  break;
+			default:
+			  
+		}
     },
 
 	_OnClose: function()
@@ -348,19 +413,39 @@ window.onload = start;*/
 
     Connected: function() { },
     Disconnected: function() { },
-    MessageReceived: function(data) { },
 
     DebugMode: false
   };
   
   WS3VWebSocket.prototype.signature =
   {
-    id: 2,
+    type: 2,
     credentials: [],
 	
     ToString: function()
 	{
-		return [this.id, this.credentials];	
+		return [this.type, this.credentials];	
+	}
+  };
+  
+  WS3VWebSocket.prototype.send =
+  {
+    type: 5,
+    id: 0,
+	method: '',
+	uri: '',
+	parameters: null,
+	
+	callback: function(data) { },
+	error: function(error, description, url) { },
+	
+    ToString: function()
+	{
+		if(typeof parameters != "undefined")
+			return [this.type, this.id.toString(), this.method, this.uri, this.parameters];
+			
+		else
+			return [this.type, this.id.toString(), this.method, this.uri];
 	}
   };
 
@@ -377,6 +462,19 @@ window.onload = start;*/
 
     return o3;
   }
+  
+  	function RetrieveMessage(array, id)
+	{
+    	for (var i = 0, len = array.length; i < len; i++)
+		{
+			console.log(array);
+			if (array[i].id === id)
+			{
+				return array.splice(i, 1);
+			}
+    	}
+    	return null;
+	}
 
   window.WS3VWebSocket = WS3VWebSocket;
   window.MergeDefaults = MergeDefaults;
