@@ -257,12 +257,12 @@ window.onload = start;*/
 				if(data[4][0] >= 0)
 				{
 					// calculate the heartbeat interval
-					// we are using the difference between the low and high
+					// we are using the average between the low and high
 					// this is very conservative calculation and can be tweeked
 					this.heart.beat = Math.round(Math.abs(data[4][1] - data[4][0]) / 2) * 1000;
 					this.heart.busy = data[4][2];
 					
-					// seems the server doesnt care if we heartbeat at a stead interval
+					// seems the server doesnt care if we heartbeat at a steady interval
 					// to collect latency diagnostic data.. so lets do it!
 					if(this.heart.busy)
 					{
