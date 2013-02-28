@@ -40,7 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Server.cs" />
+    <Compile Include="Interfaces\IWS3V_Protocol.cs" />
+    <Compile Include="Support\Filetransfer.cs" />
+    <Compile Include="Support\Heartbeat.cs" />
+    <Compile Include="WS3V Server.cs" />
     <Compile Include="JSON\JSONDecoders.cs" />
     <Compile Include="JSON\JSONEncoders.cs" />
     <Compile Include="MessageTypes\terminated.cs" />
@@ -53,6 +56,7 @@
     <Compile Include="MessageTypes\signature .cs" />
     <Compile Include="MessageTypes\gatekeeper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WS3V Protocol.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

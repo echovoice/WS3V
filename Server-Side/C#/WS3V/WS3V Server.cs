@@ -4,27 +4,25 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using WS3V.Interfaces;
 using WS3V.JSON;
 using WS3V.MessageTypes;
 
-namespace RESTful_Sample
+namespace WS3V
 {
-    public class Server : IDisposable
+    public class WS3V_Server : IDisposable
     {
         public bool authenticated { get; set; }
 
-        private Action<string> send;
+        private Action<IWS3V_Protocol> config;
+
         private bool running = false;
         private bool beat = false;
-        private int heartinterval_max, authentication_timeout, max_auths;
         private Thread heartbeat;
 
-        public Server(Action<string> send, Action<string> process, int authentication_timeout = 10, int heartinterval_max = 60, int max_auths = 3)
+        public WS3V_Server(Action<IWS3V_Protocol> _config)
         {
-            this.send = send;
-            this.authentication_timeout = authentication_timeout;
-            this.heartinterval_max = heartinterval_max;
-            this.max_auths = max_auths;
+            config = _config;
             authenticated = false;
             running = true;
 
