@@ -36,37 +36,85 @@
 
 window.onload = start;*/
 
-(function() {
-  function WS3VWebSocket(options)
-  {
-    if (!this instanceof WS3VWebSocket)
+(function()
+{
+	WS3Vglobal =
 	{
-      return new WS3VWebSocket(options);
-    }
-	else
-	{
-      if (!options)
-	  {
-        options = {};
-      }
-
-      this.settings = MergeDefaults(this._defaultOptions, options);
-
-      if (!window.WebSocket)
-	  {
-        throw 'UNSUPPORTED: Websockets are not supported in this browser!';
-      }
-
-      this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
-
-      this.Connected = this.settings.Connected;
-      this.Disconnected = this.settings.Disconnected;
-    }
+		me: null,
+		net_settings: null,
+		networks: [],
+		aux_loaded: false,
+		networks_loaded: false,
+		_3v_loaded: false,
+		_3v_image_loaded: false,
+		_3vaux_loaded: false,
+		architecture_loaded: false,
+		originalTop: 0,
+		originalLeft: 0,
+		maxHeight: 0,
+		maxWidth: 0,
+		image_link_array: [],
+		video_link_array: [],
+		image_link_arrayd: [],
+		video_link_arrayd: [],
+		urls_ignore: [],
+		image_link_current: 0,
+		image_isdragging: false,
+		voice_activity: false
+	};
 	
-	function send() { }
-  }
-  
-  
+	function WS3VWebSocket(options)
+	{
+		if (!this instanceof WS3VWebSocket)
+		{
+			return new WS3VWebSocket(options);
+		}
+		else
+		{
+			if (!options)
+			{
+				options = {};
+			}
+	
+			this.settings = MergeDefaults(this._defaultOptions, options);
+	
+			if (!window.WebSocket)
+			{
+				throw 'UNSUPPORTED: Websockets are not supported in this browser!';
+			}
+	
+			this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
+			
+			this.Connected = this.settings.Connected;
+			this.Disconnected = this.settings.Disconnected;
+		}
+	}
+
+	function WS3VWebSocket_send(props)
+	{
+		// http://ws3v.org/spec.json#send
+		this.type = 5;
+		
+		console.log(props);
+		
+		props = props || {};
+		this.id = props.id || "WS3V" + Math.floor(Math.random()*1001);
+		this.method = props.method || '';
+		this.uri = props.uri || '';
+		this.parameters = props.parameters || null;
+		this.callback = props.callback || function(data){};
+		this.error = props.error || function(error, description, url){};
+	}
+	
+	WS3VWebSocket_send.prototype.ToString = function()
+	{
+		if(this.parameters == null || typeof this.parameters == 'undefined' || this.parameters == '' && Object.keys(this.parameters).length === 0)
+			return [this.type, this.id.toString(), this.method, this.uri];
+				
+		else
+			return [this.type, this.id.toString(), this.method, this.uri, this.parameters];
+	};
+
 
   WS3VWebSocket.prototype =
   {
@@ -90,17 +138,6 @@ window.onload = start;*/
 	session_id: '',
 	
 	message_index: 0,
-	
-	getNext: function ()
-	{
-		var _idchars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-		var _idlen = 16;
-	   var id = "";
-	   for (var i = 0; i < _idlen; i += 1) {
-		  id += _idchars.charAt(Math.floor(Math.random() * _idchars.length));
-	   }
-	   return id;
-	},
 	
 	message_queue: [],
 	
@@ -151,23 +188,12 @@ window.onload = start;*/
 		}
     },
 	
-	Send: function(method, uri, parameters, callback, error)
+	Send: function(props)
 	{
-		package = new WS3VWebSocket.prototype.send;
-		package.id = this.getNext();
-		package.method = method;
-		package.uri = uri;
-		package.parameters = parameters;
-		if (callback instanceof Function)
-		{
-			package.callback = callback;
-		}
-		if (error instanceof Function)
-		{
-			package.error = error;
-		}
-		this.message_queue.push(package);
-		this._Send(package.ToString());
+		props.id = ++this.message_index;
+		var message = new WS3VWebSocket_send(props);
+		this.message_queue.push(message);
+		this._Send(message.ToString());
 	},
 
 	_Send: function(data)
@@ -343,14 +369,12 @@ window.onload = start;*/
 			case 6:
 				// this is a RPC response, lets find the message and fire the callback
 				var message = RetrieveMessage(this.message_queue, data[1])
-				
-				console.log(data[1]);
-				
+						
 				// make sure its not null
-				if(typeof message != "undefined")
+				if(typeof message[0] != "undefined")
 				{
-					if (message.callback instanceof Function)
-						message.callback(data[2])
+					if (message[0].callback instanceof Function)
+						message[0].callback(data[2])
 				}
 				
 			  break;
@@ -358,16 +382,16 @@ window.onload = start;*/
 			 case 7:
 				// this is a RPC error response, lets find the message and fire the error callback
 				var message = RetrieveMessage(this.message_queue, data[1])
-				
+						
 				// make sure its not null
-				if(typeof message != "undefined")
+				if(typeof message[0] != "undefined")
 				{
-					if (message.error instanceof Function)
-					
-						message.error(data[2], data[3], data[4])
+					if (message[0].error instanceof Function)
+						message[0].error(data[2], data[3], data[4])
 				}
 				
 			  break;
+			  
 			default:
 			  
 		}
@@ -427,27 +451,6 @@ window.onload = start;*/
 		return [this.type, this.credentials];	
 	}
   };
-  
-  WS3VWebSocket.prototype.send =
-  {
-    type: 5,
-    id: 0,
-	method: '',
-	uri: '',
-	parameters: null,
-	
-	callback: function(data) { },
-	error: function(error, description, url) { },
-	
-    ToString: function()
-	{
-		if(typeof parameters != "undefined")
-			return [this.type, this.id.toString(), this.method, this.uri, this.parameters];
-			
-		else
-			return [this.type, this.id.toString(), this.method, this.uri];
-	}
-  };
 
   function MergeDefaults(o1, o2)
   {
@@ -467,8 +470,7 @@ window.onload = start;*/
 	{
     	for (var i = 0, len = array.length; i < len; i++)
 		{
-			console.log(array);
-			if (array[i].id === id)
+			if (array[i].id == id)
 			{
 				return array.splice(i, 1);
 			}
@@ -478,6 +480,7 @@ window.onload = start;*/
 
   window.WS3VWebSocket = WS3VWebSocket;
   window.MergeDefaults = MergeDefaults;
+  window.RetrieveMessage = RetrieveMessage;
 
   if(window.MozWebSocket)
     window.WebSocket = MozWebSocket;

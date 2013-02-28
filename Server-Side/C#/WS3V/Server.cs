@@ -1,6 +1,4 @@
-﻿using Fleck;
-using RESTful_Sample.Music_Playlists;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,35 +9,19 @@ using WS3V.MessageTypes;
 
 namespace RESTful_Sample
 {
-    /// <summary>
-    /// Designed to be used with Fleck Server, swap socket object if using another.
-    /// </summary>
-    public class Client : IDisposable
+    public class Server : IDisposable
     {
-        public IWebSocketConnection socket { get; set; }
         public bool authenticated { get; set; }
 
+        private Action<string> send;
         private bool running = false;
         private bool beat = false;
         private int heartinterval_max, authentication_timeout, max_auths;
         private Thread heartbeat;
 
-        // obviously this is not how this works server-side, but you knew that
-        private const string api_key = "[\"98eac98feeaf8e25410ce135076d688a\"]";
-
-        // again this is NOT how APIs work, but this is how demos work, lets create some dummy static playlist data
-        private Playlist playlist = new Playlist("The Best of Phil Collins", "Collins is one of only three recording artists (along with Paul McCartney and Michael Jackson) who have sold over 100 million albums worldwide");
-
-        public Client(IWebSocketConnection socket, int authentication_timeout = 10, int heartinterval_max = 60, int max_auths = 3)
+        public Server(Action<string> send, Action<string> process, int authentication_timeout = 10, int heartinterval_max = 60, int max_auths = 3)
         {
-            // add some of the best songs ever written...
-            playlist.addSong(new Song("Phil Collins", "No Jacket Required", "Sussudio", "http://g-ecx.images-amazon.com/images/G/01/ciu/e5/41/4059c060ada08c928d90e110.L._AA300_.jpg"));
-            playlist.addSong(new Song("Phil Collins", "...Hits", "Another Day In Paradise", "http://ecx.images-amazon.com/images/I/51WRpYh8nNL._SL500_AA280_.jpg"));
-            playlist.addSong(new Song("Phil Collins", "Tarzan [Soundtrack]", "Youll Be In My Heart", "http://ecx.images-amazon.com/images/I/516JGYA351L._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-            playlist.addSong(new Song("Phil Collins", "Face Value", "In The Air Tonight", "http://ecx.images-amazon.com/images/I/414D91CKFFL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-            playlist.addSong(new Song("Phil Collins", "Love Songs: A Compilation Old & New", "True Colours", "http://ecx.images-amazon.com/images/I/51Y46K9GYEL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-
-            this.socket = socket;
+            this.send = send;
             this.authentication_timeout = authentication_timeout;
             this.heartinterval_max = heartinterval_max;
             this.max_auths = max_auths;
@@ -86,7 +68,7 @@ namespace RESTful_Sample
 
             if (input == "lub")
             {
-                socket.Send("dub");
+                send("dub");
                 return;
             }
 
