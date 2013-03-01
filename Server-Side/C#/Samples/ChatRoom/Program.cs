@@ -8,6 +8,7 @@ using Fleck;
 using WS3V;
 using WS3V.JSON;
 using WS3V.Support;
+using Chat_Room_Sample.Chat_Rooms;
 
 namespace Chat_Room_Sample
 {
@@ -17,6 +18,12 @@ namespace Chat_Room_Sample
         {
             // used to maintain a list of clients
             ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients = new ConcurrentDictionary<Guid, WS3V_Client>();
+
+            // in this demo we setup the chatrooms
+            List<Room> rooms = new List<Room>();
+            rooms.Add(new Room("The Best Chat Room", "Where only the best people chat."));
+            rooms.Add(new Room("<3 Phil Collins", "In the air tonight, each and every night."));
+            rooms.Add(new Room("80's Music Fans ONLY!", "If you love 80's music come chat."));
 
             // create the fleck websocket server
             // see https://github.com/statianzo/Fleck for more information
@@ -31,14 +38,12 @@ namespace Chat_Room_Sample
                     // on open callback we create the client
                     WS3V_Client client = new WS3V_Client(new WS3V_Protocol(ws3v_protocol =>
                     {
-                        Playlist playlist = new Playlist("", "");
-
                         // we need to pass the socket send and close methods inside the protocol
                         ws3v_protocol.SocketSend = socket.Send;
                         ws3v_protocol.Dispose = socket.Close;
 
                         // lets provide some more info about this server
-                        ws3v_protocol.server = "Sample RESTful API Demo 0.9.6";
+                        ws3v_protocol.server = "Sample Chat Room Demo 0.9.6";
 
                         // provide the hook with the clientID, convert GUID to string
                         ws3v_protocol.clientID = socket.ConnectionInfo.Id.ToString("N");
@@ -48,34 +53,11 @@ namespace Chat_Room_Sample
                         ws3v_protocol.heartbeat.heartbeat_max_seconds = 60;
                         ws3v_protocol.heartbeat.allow_heartbeats_when_busy = false;
 
-                        // here is where we define the server-side settings
-                        // in this demo we are going to simulate an api_key requirement
-                        ws3v_protocol.credentials = new string[] { "api_key" };
-                        // obviously this is not how this works server-side, but you knew that and understand this is a demo
-                        // replace this with your logic to validate an api key
-                        ws3v_protocol.Authenticate = (x) =>
-                        {
-                            if (x[0] == "98eac98feeaf8e25410ce135076d688a")
-                            {
-                                // here we are going to simulate building a playlist for a particular client
-                                // again this is NOT how you should do this, but for a demo this is perfect
-                                playlist = new Playlist("The Best of Phil Collins", "Collins is one of only three recording artists (along with Paul McCartney and Michael Jackson) who have sold over 100 million albums worldwide");
-                                playlist.addSong(new Song("Phil Collins", "No Jacket Required", "Sussudio", "http://g-ecx.images-amazon.com/images/G/01/ciu/e5/41/4059c060ada08c928d90e110.L._AA300_.jpg"));
-                                playlist.addSong(new Song("Phil Collins", "...Hits", "Another Day In Paradise", "http://ecx.images-amazon.com/images/I/51WRpYh8nNL._SL500_AA280_.jpg"));
-                                playlist.addSong(new Song("Phil Collins", "Tarzan [Soundtrack]", "Youll Be In My Heart", "http://ecx.images-amazon.com/images/I/516JGYA351L._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-                                playlist.addSong(new Song("Phil Collins", "Face Value", "In The Air Tonight", "http://ecx.images-amazon.com/images/I/414D91CKFFL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-                                playlist.addSong(new Song("Phil Collins", "Love Songs: A Compilation Old & New", "True Colours", "http://ecx.images-amazon.com/images/I/51Y46K9GYEL._SL500_AA300__PJautoripBadge,BottomRight,4,-40_OU11__.jpg"));
-
-                                // return true to say the user is valid
-                                return true;
-                            }
-
-                            // user is not authenticated, return false
-                            return false;
-                        };
+                        // enable channel listing
+                        ws3v_protocol.channel_listing = true;
 
                         // lets wire up the rpc commands
-                        ws3v_protocol.RPC = (x) =>
+                        /*ws3v_protocol.RPC = (x) =>
                         {
                             if (x.uri == "/user/playlist/bestofphil")
                             {
@@ -100,7 +82,7 @@ namespace Chat_Room_Sample
                             }
 
                             throw new RPC_Exception(400, "Bad Request", "http://example.com/api/error#400");
-                        };
+                        };*/
 
                     }));
 
@@ -126,7 +108,7 @@ namespace Chat_Room_Sample
             });
 
             Console.WriteLine("\r\n\r\nServer-side is now running, please open the Client-side sample file:");
-            Console.WriteLine("\r\n\t\\Client-side\\JS\\Samples\\RESTful Sample\\client.html");
+            Console.WriteLine("\r\n\t\\Client-side\\JS\\Samples\\Chat Room Sample\\client.html");
 
             string input = Console.ReadLine();
         }

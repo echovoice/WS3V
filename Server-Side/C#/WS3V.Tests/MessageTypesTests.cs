@@ -46,7 +46,7 @@ namespace WS3V.Tests
             howdy h = new howdy(session_id);
             string expected = "[3,\"" + session_id + "\",1,\"\",[-1,-1,false],[0,false,false,false,\"0\",\"0\"],false,false,0]";
             string result = h.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
 
             // test documentation howdy
             h = new howdy(session_id, "Example 0.9.6", 120, new Heartbeat(30, 60, true), new Filetransfer(1));
@@ -65,7 +65,7 @@ namespace WS3V.Tests
 
             expected = "[3,\"" + session_id + "\",1,\"Example 0.9.6\",[30,60,true],[1,true,true,true,\"250K\",\"50M\"],true,true,120,{\"api_day_quota\":1000,\"api_day_reset\":41268740,\"api_day_used\":153,\"api_hour_quota\":100,\"api_hour_reset\":41267360,\"api_hour_used\":15,\"sample_feature_1\":true,\"sample_feature_2\":false}]";
             result = h.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
 
             // check the shorthand file sizes
             h.filetransfer.max_chunk_size = "250";
@@ -129,14 +129,14 @@ namespace WS3V.Tests
             receive r = new receive("swezataf3as5", JSONEncoders.EncodeJsString("definitly slightly positive"), headers.ToString());
             string expected = "[6,\"swezataf3as5\",\"definitly slightly positive\",{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
             string result = r.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
 
             // documentation example 2
             demo_object obj = new demo_object();
             r = new receive("ruvabras3ade", obj.ToString());
             expected = "[6,\"ruvabras3ade\",{\"deploy\":true,\"location\":2,\"changes\":392}]";
             result = r.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -147,7 +147,44 @@ namespace WS3V.Tests
             error e = new error("8hewrafrey2z", new RPC_Exception(404, "method not found", "http://example.com/api/error#404"), headers.ToString());
             string expected = "[7,\"8hewrafrey2z\",[404,\"method not found\",\"http:\\/\\/example.com\\/api\\/error#404\"],{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
             string result = e.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void channels()
+        {
+            // example 1
+            string input = "[8,true,\"^chatrooms\"]";
+            string[] message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "8");
+
+            channels c = new channels(message);
+            Assert.AreEqual(c.meta, true);
+            Assert.AreEqual(c.filter, "^chatrooms");
+
+            // blank example
+            input = "[8]";
+            message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "8");
+
+            c = new channels(message);
+            Assert.AreEqual(c.meta, false);
+            Assert.AreEqual(c.filter, null);
+        }
+
+        [TestMethod]
+        public void listings()
+        {
+            // documentation example 1
+            PubSub_Core core = new PubSub_Core();
+            core.CreateChannel("/public/chatrooms/A21", "The Best Chat Room");
+            core.CreateChannel("/public/chatrooms/A22", "<3 Phil Collins");
+            core.CreateChannel("/public/chatrooms/B12", "80's Music Fans ONLY!");
+
+            listings l = new listings(core);
+            string expected = "[9,[\"\\/public\\/chatrooms\\/A21\",\"\\/public\\/chatrooms\\/A22\",\"\\/public\\/chatrooms\\/B12\"],[\"The Best Chat Room\",\"\\u003C3 Phil Collins\",\"80's Music Fans ONLY!\"]]";
+            string result = l.ToString();
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]
@@ -166,13 +203,13 @@ namespace WS3V.Tests
             terminated t = new terminated(200, "goodbye");
             string expected = "[26,200,\"goodbye\"]";
             string result = t.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
 
             // documentation example 2
             t = new terminated(403, "forbidden, access denied", "http://example.com/api/error#403");
             expected = "[26,403,\"forbidden, access denied\",\"http:\\/\\/example.com\\/api\\/error#403\"]";
             result = t.ToString();
-            Assert.AreEqual(result, expected);
+            Assert.AreEqual(expected, result);
         }
     }
 

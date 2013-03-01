@@ -1,0 +1,156 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Phil Collins Music Playlist Demo</title>
+</head>
+<body>
+	<p>RESTful API over WebSockets using the WS3V Protocol</p>
+	<p>Phil Collins Music Playlist Demo</p>
+	<form id="sendForm">
+    	<p>&nbsp;</p>
+        <p>In this demo we also test the <a href="http://ws3v.org/spec.json#gatekeeper" target="_blank">gatekeeper</a> functionality, this case specifically we are using an API key.</p>
+        <p>The only valid API key is prepopulated below, feel free to try something else and see what happens (either use the developer console or the WS3V WebSocket debug console.)</p>
+    	<p>API Key: <input id="api_key" size="32" value="98eac98feeaf8e25410ce135076d688a"/></p>
+		<p>WS3V WebSocket Debug Console: <input type="checkbox" id="debug" value="true" checked></p>
+        <p><input id="connect" onclick="websocket()" type="button" value="Connect"></p>
+	</form>
+    <div id="table"></div>
+	<script src="../../WS3V/websocket.js"></script>
+    
+    <!-- Debug Mode Requires the Following Styles and Scripts -->
+    <link rel="stylesheet" href="../../WS3V/debug-assets/css/styles.css">
+    <script src="../../WS3V/debug-assets/vkbeautify/vkbeautify.js"></script>
+    <!-- End Debug Required -->
+    
+    <script>
+	function removeSong(song)
+	{
+		// make sure websocket is open
+		if(RESTfulAPI.SocketState == WS3VWebSocket.prototype.SocketStates.Open)
+		{
+			// this is how a request looks, it is based on async "promises", which states that eventually the request will return a value
+			RESTfulAPI.Send({method:"DELETE", uri:"/user/playlist/bestofphil", parameters: song,
+				
+				// if the request works
+				callback: function(data)
+				{
+					getPlaylist();
+				},
+				
+				// if the request has an error
+				error: function(error, description, url)
+				{
+					console.log(error);
+					console.log(description);
+					console.log(url);
+				}
+			});
+		}
+	}
+	
+	function addSong()
+	{	
+		// dont allow blank titles
+		if(document.getElementById('title').value == '')
+		{
+			alert('no title? no way...');
+			return;
+		}
+		
+		// make sure websocket is open
+		if(RESTfulAPI.SocketState == WS3VWebSocket.prototype.SocketStates.Open)
+		{
+			// this is how a request looks, it is based on async "promises", which states that eventually the request will return a value
+			RESTfulAPI.Send({method:"POST", uri:"/user/playlist/bestofphil", parameters: [document.getElementById('art').value, document.getElementById('title').value, document.getElementById('artist').value, document.getElementById('album').value],
+				
+				// if the request works
+				callback: function(data)
+				{
+					getPlaylist();
+				},
+				
+				// if the request has an error
+				error: function(error, description, url)
+				{
+					console.log(error);
+					console.log(description);
+					console.log(url);
+				}
+			});
+		}
+	}
+	
+	function getListing()
+	{
+		// make sure websocket is open and supports channels
+		if(RESTfulAPI.SocketState == WS3VWebSocket.prototype.SocketStates.Open && RESTfulAPI.channels)
+		{
+			// this is how a request looks, it is based on async "promises", which states that eventually the request will return a value
+			RESTfulAPI.Channels(
+			{
+				// if the request works
+				callback: function(data)
+				{
+					console.log(data);
+				}
+			});
+		}
+	};
+	
+	function processData(data)
+	{
+		var html = '<table dir="ltr" width="100%" border="1" summary="Music Playlist"><caption>'+data[0]+'<br />'+data[1]+'</caption><thead><tr><th scope="col"></th><th scope="col">Album Art</th><th scope="col">Title</th><th scope="col">Artist</th><th scope="col">Album</th></tr></thead><tbody>';
+		
+		for (var i=2; i < data.length; i++)
+			html = html + '<tr><td><input id="remove" onclick="removeSong(\''+data[i][2]+'\')" type="button" value="Remove"></td><td><img src="'+data[i][3]+'" width="50" height="50"></td><td>'+data[i][2]+'</td><td>'+data[i][0]+'</td><td>'+data[i][1]+'</td></tr>';
+			
+		html = html + '<tr><td><input id="add" onclick="addSong()" type="button" value="Add New"></td><td><input required id="art" size="32" placeholder="url album art"/></td><td><input required id="title" size="32" placeholder="title"/></td><td><input required id="artist" size="32" placeholder="artist"/></td><td><input required id="album" size="32" placeholder="album"/></td></tr>';
+
+		html = html + '</tbody></table>';
+		document.getElementById('table').innerHTML = html;
+	}
+		
+	function websocket()
+	{	
+		// build the WS3V WebSocket
+		RESTfulAPI = new WS3VWebSocket
+		({ 
+			Server: "127.0.0.1",
+			Port: 8181,
+			Action: "RPCAPI",
+			DebugMode: document.getElementById('debug').checked
+		});
+		
+		
+		
+		RESTfulAPI.Connected = function()
+		{
+			getListing();
+			console.log("connected");
+		};
+		
+		RESTfulAPI.Disconnected = function()
+		{
+			console.log("good bye");
+		};
+		
+		// remove the connect form and all of its children
+		while (document.getElementById('sendForm').hasChildNodes())
+		{
+			document.getElementById('sendForm').removeChild(document.getElementById('sendForm').lastChild);
+		}
+		
+		// start the connection
+		RESTfulAPI.Connect();
+	}
+	
+	websocket();
+	</script>
+<p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <div class="footer container pad-sides-40">
+        <div class="copy">WS3V is an open WebSocket protocol providing modern web standard solutions for RESTful APIs.</div>
+        <div class="trademark"><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">WS3V</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://ws3v.org" property="cc:attributionName" rel="cc:attributionURL" target="_blank">Mike Olsen</a> is licensed under a <a target="_blank" rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US">Creative Commons Attribution 3.0 Unported License</a>.</div>
+    </div>
+</body>
+</html>

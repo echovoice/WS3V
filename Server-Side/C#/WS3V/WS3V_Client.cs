@@ -43,11 +43,16 @@ namespace WS3V
                     {
                         Thread.Sleep(protocol.authentication_timeout * 1000);
 
-                        if(!authenticated && !isterminated)
+                        if (!authenticated && !isterminated)
                             send_terminated(403, "Forbidden", "http://example.com/api/error#403");
 
                     }).Start();
                 }
+            }
+            else
+            {
+                authenticated = true;
+                send_howdy();
             }
         }
 
@@ -88,11 +93,22 @@ namespace WS3V
                         process_send(message);
                         return;
 
+                    // channel listings command
+                    case 8:
+                        process_channels(message);
+                        return;
+
                 }
             }
 
             // the message is not valid, send bad request
             send_terminated(400, "Bad Request", "http://example.com/api/error#400");
+        }
+
+        // lets tell the client what channels are availible
+        public void process_channels(string[] message)
+        {
+            if(
         }
 
         // this is the main processor for incoming rpc commands
@@ -126,7 +142,7 @@ namespace WS3V
             if (protocol.Authenticate(JSONDecoders.DecodeJSONArray(message[1])))
             {
                 authenticated = true;
-                protocol.SocketSend(new howdy(protocol.clientID, protocol.server, protocol.recovery_timeout, protocol.heartbeat, protocol.filetransfer).ToString());
+                send_howdy();
             }
 
             // they didnt authenticate, check if we should allow them to try again
@@ -143,6 +159,22 @@ namespace WS3V
         {
             gatekeeper g = new gatekeeper(protocol.credentials, protocol.authentication_timeout, protocol.authentication_attempts--, 401, "Unauthorized", "http://example.com/api/error#401");
             protocol.SocketSend(g.ToString());
+        }
+
+        public void send_howdy()
+        {
+            howdy h = new howdy(protocol.clientID, protocol.server, protocol.recovery_timeout, protocol.heartbeat, protocol.filetransfer);
+
+            if (protocol.channel_listing)
+                h.channel_listing = true;
+
+            if (protocol.recovery)
+                h.recovery = true;
+
+            if (protocol.headers != null)
+                h.headers = protocol.headers;
+
+            protocol.SocketSend(h.ToString());
         }
 
         public void send_terminated(int code, string message, string url = "")

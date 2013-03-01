@@ -41,6 +41,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interfaces\IWS3V_Protocol.cs" />
+    <Compile Include="MessageTypes\channels.cs" />
+    <Compile Include="MessageTypes\listings.cs" />
+    <Compile Include="Support\PubSub Channel.cs" />
+    <Compile Include="Support\PubSub Core.cs" />
     <Compile Include="Support\RPC Exception.cs" />
     <Compile Include="Support\RPC Outgoing.cs" />
     <Compile Include="Support\Errors.cs" />

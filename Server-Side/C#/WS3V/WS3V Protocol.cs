@@ -16,6 +16,8 @@ namespace WS3V
     public class WS3V_Protocol : IWS3V_Protocol
     {
         public Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
+        public Action<string> Channels { get; set; }
+        public Action<string> SubscribeChannel { get; set; }
         public Action<string> Pub { get; set; }
         public Action<string> Sub { get; set; }
         public Action<string> SocketSend { get; set; }

@@ -95,8 +95,6 @@ window.onload = start;*/
 		// http://ws3v.org/spec.json#send
 		this.type = 5;
 		
-		console.log(props);
-		
 		props = props || {};
 		this.id = props.id || "WS3V" + Math.floor(Math.random()*1001);
 		this.method = props.method || '';
@@ -113,6 +111,31 @@ window.onload = start;*/
 				
 		else
 			return [this.type, this.id.toString(), this.method, this.uri, this.parameters];
+	};
+	
+	function WS3VWebSocket_channels(props)
+	{
+		// http://ws3v.org/spec.json#channels
+		this.type = 8;
+		
+		props = props || {};
+		this.meta = props.meta || false;
+		this.filter = props.filter || '';
+		this.callback = props.callback || function(channels, meta){};
+	}
+	
+	WS3VWebSocket_channels.prototype.ToString = function()
+	{		
+		if(this.filter == null || typeof this.filter == 'undefined' || this.filter == '')
+		{
+			if(!this.meta)
+				return [this.type];
+				
+			else
+				return [this.type, this.meta];
+		}	
+		else
+			return [this.type, this.meta, this.filter];
 	};
 
 
@@ -134,6 +157,8 @@ window.onload = start;*/
     SocketState: 3,
 	
 	authenticated: false,
+	channels: false,
+	channel_callback: function() { },
 	
 	session_id: '',
 	
@@ -188,6 +213,22 @@ window.onload = start;*/
 			}
 		}
     },
+	
+	Channels: function(props)
+	{
+		if(this.closed)
+			return;
+
+		if(!this.channels)
+		{
+			throw "ERROR: Channel listing on this server is not supported!";
+			return;
+		}
+
+		var message = new WS3VWebSocket_channels(props);
+		this.channel_callback = message.callback;
+		this._Send(message.ToString());
+	},
 	
 	Send: function(props)
 	{
@@ -321,6 +362,14 @@ window.onload = start;*/
 				// get session id information
 				this.session_id = data[1];
 				
+				// channel listing
+				if(data[7] === true)
+					this.channels = true;
+					
+				console.log(data);
+				console.log(data);
+				console.log(data);
+				
 				// check if heartbeats are enabled
 				if(data[4][0] >= 0)
 				{
@@ -375,29 +424,36 @@ window.onload = start;*/
 		{
 			case 6:
 				// this is a RPC response, lets find the message and fire the callback
-				var message = RetrieveMessage(this.message_queue, data[1])
+				var message = RetrieveMessage(this.message_queue, data[1]);
 						
 				// make sure its not null
 				if(typeof message[0] != "undefined")
 				{
 					if (message[0].callback instanceof Function)
-						message[0].callback(data[2])
+						message[0].callback(data[2]);
 				}
 				
 			  break;
 			  
 			 case 7:
 				// this is a RPC error response, lets find the message and fire the error callback
-				var message = RetrieveMessage(this.message_queue, data[1])
+				var message = RetrieveMessage(this.message_queue, data[1]);
 						
 				// make sure its not null
 				if(typeof message[0] != "undefined")
 				{
 					if (message[0].error instanceof Function)
-						message[0].error(data[2], data[3], data[4])
+						message[0].error(data[2], data[3], data[4]);
 				}
 				
 			  break;
+			  
+			case 9:
+				// this is a listings message response	
+				if (this.channel_callback instanceof Function)
+					channel_callback(data[1], data[2]);
+
+				break;
 			  
 			default:
 			  

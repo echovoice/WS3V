@@ -9,23 +9,34 @@ namespace WS3V.MessageTypes
 {
     /// <summary>
     /// Built from WS3V Specifications v1
-    /// http://ws3v.org/spec.json#recover
+    /// http://ws3v.org/spec.json#send
     /// </summary>
 
-    public class recover
+    public class send
     {
-        private const int id = 4;
+        private const int id = 5;
 
-        public string session_id { get; set; }
+        public string message_id { get; set; }
+        public string method { get; set; }
+        public string uri { get; set; }
+        public string parameters { get; set; }
 
-        public recover()
+        public send()
         {
-            session_id = string.Empty;
+            message_id = string.Empty;
+            method = string.Empty;
+            uri = string.Empty;
+            parameters = null;
         }
 
-        public recover(string[] message)
+        public send(string[] message)
         {
-            session_id = message[1];
+            message_id = message[1];
+            method = message[2];
+            uri = message[3];
+
+            if (message.Length == 5)
+                parameters = message[4];
         }
     }
 }
