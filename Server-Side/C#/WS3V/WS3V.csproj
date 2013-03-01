@@ -41,9 +41,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interfaces\IWS3V_Protocol.cs" />
+    <Compile Include="Support\RPC Exception.cs" />
+    <Compile Include="Support\RPC Outgoing.cs" />
+    <Compile Include="Support\Errors.cs" />
     <Compile Include="Support\Filetransfer.cs" />
     <Compile Include="Support\Heartbeat.cs" />
-    <Compile Include="WS3V Server.cs" />
+    <Compile Include="Support\RPC Incoming.cs" />
+    <Compile Include="WS3V_Client.cs" />
     <Compile Include="JSON\JSONDecoders.cs" />
     <Compile Include="JSON\JSONEncoders.cs" />
     <Compile Include="MessageTypes\terminated.cs" />

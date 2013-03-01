@@ -9,21 +9,27 @@ namespace WS3V.Interfaces
 {
     public interface IWS3V_Protocol
     {
-        public Func<string, string> RPC;
-        public Action<string> Pub;
-        public Action<string> Sub;
-        public Action<string> SocketSend;
+        Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
+        Action<string> Pub { get; set; }
+        Action<string> Sub { get; set; }
+        Action<string> SocketSend { get; set; }
+        Action Dispose { get; set; }
 
-        public string server;
+        string server { get; set; }
 
-        public Heartbeat heartbeat;
-        public Filetransfer filetransfer;
+        string clientID { get; set; }
 
-        public int authentication_attempts;
-        public int authentication_timeout;
-        public bool recovery;
-        public int recovery_timeout;
-        public bool channel_listing;
-        public string headers;
+        Heartbeat heartbeat { get; set; }
+        Filetransfer filetransfer { get; set; }
+
+        int authentication_attempts { get; set; }
+        int authentication_timeout { get; set; }
+        bool recovery { get; set; }
+        int recovery_timeout { get; set; }
+        bool channel_listing { get; set; }
+        string headers { get; set; }
+
+        string[] credentials { get; set; }
+        Func<string[], bool> Authenticate { get; set; }
     }
 }

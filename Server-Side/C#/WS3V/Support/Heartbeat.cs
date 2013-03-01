@@ -17,8 +17,18 @@ namespace WS3V.Support
         public int heartbeat_min_seconds { get; set; }
         public int heartbeat_max_seconds { get; set; }
         public bool allow_heartbeats_when_busy { get; set; }
+        public Action cardiac_arrest { get; set; }
 
-        private Action<bool> cardiac_arrest;
+        public bool enabled
+        {
+            get
+            {
+                if (heartbeat_min_seconds == -1 || heartbeat_max_seconds == -1)
+                    return false;
+                else
+                    return true;
+            }
+        }
 
         // flag used in the loop to determine if the
         // connection is active
@@ -51,13 +61,19 @@ namespace WS3V.Support
         private bool running = false;
         private Thread heartbeat = null;
 
-        public Heartbeat() : this(null) { }
+        public Heartbeat() : this(false) { }
 
-        public Heartbeat(Action<bool> cardiac_arrest)
+        /// <summary>
+        /// If this connection would like to enable the heartbeat function
+        /// this will need to be setup, this object will monitor itself for a dead connection
+        /// and trigger a cardiac arrest if the tunnel has been idle and heartbeats are required.
+        /// </summary>
+        /// <param name="enabled">True enables Heartbeat</param>
+
+        public Heartbeat(bool enabled)
         {
-            if (cardiac_arrest != null)
+            if (enabled)
             {
-                this.cardiac_arrest = cardiac_arrest;
                 heartbeat_min_seconds = 30;
                 heartbeat_max_seconds = 60;
                 allow_heartbeats_when_busy = true;
@@ -71,7 +87,7 @@ namespace WS3V.Support
             }
         }
 
-        public Heartbeat(int heartbeat_min_seconds, int heartbeat_max_seconds, bool allow_heartbeats_when_busy, Action<bool> cardiac_arrest)
+        public Heartbeat(int heartbeat_min_seconds, int heartbeat_max_seconds, bool allow_heartbeats_when_busy)
         {
             if (heartbeat_min_seconds == -1 || heartbeat_max_seconds == -1)
             {
@@ -84,8 +100,6 @@ namespace WS3V.Support
                 this.heartbeat_min_seconds = heartbeat_min_seconds;
                 this.heartbeat_max_seconds = heartbeat_max_seconds;
                 this.allow_heartbeats_when_busy = allow_heartbeats_when_busy;
-
-                this.cardiac_arrest = cardiac_arrest;
 
                 if(!allow_heartbeats_when_busy)
                     pulse = (int)((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000000) - 1308823200;
@@ -107,21 +121,25 @@ namespace WS3V.Support
         {
             while (running)
             {
-                // start with sleep cycle
+                // start with sleep cycle, check for running during loop
                 int z = heartbeat_max_seconds;
                 while (running && z-- > 0)
                     Thread.Sleep(1000);
 
+                // no longer running, leave the thread
                 if (!running)
                     return;
 
+                // no beats and the max time has passed, time to die
                 if (!_beat)
                 {
                     running = false;
-                    cardiac_arrest(true);
+                    if(cardiac_arrest != null)
+                        cardiac_arrest();
                     return;
                 }
 
+                // trigger beat back to false and re-loop
                 _beat = false;
             }
         }

@@ -15,12 +15,15 @@ namespace WS3V
     
     public class WS3V_Protocol : IWS3V_Protocol
     {
-        public Func<string, string> RPC { get; set; }
+        public Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
         public Action<string> Pub { get; set; }
         public Action<string> Sub { get; set; }
         public Action<string> SocketSend { get; set; }
+        public Action Dispose { get; set; }
 
         public string server { get; set; }
+
+        public string clientID { get; set; }
 
         public Heartbeat heartbeat { get; set; }
         public Filetransfer filetransfer { get; set; }
@@ -32,16 +35,20 @@ namespace WS3V
         public bool channel_listing { get; set; }
         public string headers  { get; set; }
 
+        public string[] credentials { get; set; }
+        public Func<string[], bool> Authenticate { get; set; }
+
         private Action<IWS3V_Protocol> config;
 
         public WS3V_Protocol(Action<IWS3V_Protocol> _config)
         {
-            RPC = x => { return x; };
+            RPC = x => { return new RPC_Outgoing(); };
             Pub = x => { };
             Sub = x => { };
             SocketSend = x => { };
 
             server = string.Empty;
+            clientID = string.Empty;
             heartbeat = new Heartbeat();
             filetransfer = new Filetransfer();
 
@@ -51,6 +58,9 @@ namespace WS3V
             recovery_timeout = 0;
             channel_listing = false;
             headers = null;
+
+            credentials = null;
+            Authenticate = x => { return true; };
 
             config = _config;
             config(this);

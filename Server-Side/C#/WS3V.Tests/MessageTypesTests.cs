@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using WS3V.MessageTypes;
 using WS3V.JSON;
 using System.Text;
+using WS3V.Support;
 
 namespace WS3V.Tests
 {
@@ -48,7 +49,7 @@ namespace WS3V.Tests
             Assert.AreEqual(result, expected);
 
             // test documentation howdy
-            h = new howdy(session_id, "Example 0.9.6", 30, 60, true, 1, 120);
+            h = new howdy(session_id, "Example 0.9.6", 120, new Heartbeat(30, 60, true), new Filetransfer(1));
 
             h.filetransfer.allow_pausing = true;
             h.filetransfer.force_chunk_integrity = true;
@@ -143,8 +144,8 @@ namespace WS3V.Tests
         {
             // documentation example 1
             fake_headers_short headers = new fake_headers_short();
-            error e = new error("8hewrafrey2z", 404, "method not found", "http://example.com/api/error#404", headers.ToString());
-            string expected = "[7,\"8hewrafrey2z\",404,\"method not found\",\"http:\\/\\/example.com\\/api\\/error#404\",{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
+            error e = new error("8hewrafrey2z", new RPC_Exception(404, "method not found", "http://example.com/api/error#404"), headers.ToString());
+            string expected = "[7,\"8hewrafrey2z\",[404,\"method not found\",\"http:\\/\\/example.com\\/api\\/error#404\"],{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
             string result = e.ToString();
             Assert.AreEqual(result, expected);
         }
