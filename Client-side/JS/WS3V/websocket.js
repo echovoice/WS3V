@@ -138,6 +138,7 @@ window.onload = start;*/
 	session_id: '',
 	
 	message_index: 0,
+	closed: false,
 	
 	message_queue: [],
 	
@@ -190,6 +191,9 @@ window.onload = start;*/
 	
 	Send: function(props)
 	{
+		if(this.closed)
+			return;
+			
 		props.id = ++this.message_index;
 		var message = new WS3VWebSocket_send(props);
 		this.message_queue.push(message);
@@ -198,6 +202,9 @@ window.onload = start;*/
 
 	_Send: function(data)
 	{
+		if(this.closed)
+			return;
+			
 		if (typeof data === 'object')
 		
 			data = JSON.stringify(data);
@@ -399,7 +406,10 @@ window.onload = start;*/
 
 	_OnClose: function()
 	{
-		var instance = this;
+		if(this.closed)
+			return;
+			
+		this.closed = true;
 		
 		if (this.settings.DebugMode)
 			this.Debug('Connection closed.', 'client');

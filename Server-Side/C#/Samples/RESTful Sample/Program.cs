@@ -1,15 +1,15 @@
-﻿using Fleck;
-using RESTful_Sample.Music_Playlists;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Fleck;
 using WS3V;
 using WS3V.JSON;
 using WS3V.Support;
+using RESTful_Sample.Music_Playlists;
 
 namespace RESTful_Sample
 {
@@ -44,6 +44,11 @@ namespace RESTful_Sample
 
                         // provide the hook with the clientID, convert GUID to string
                         ws3v_protocol.clientID = socket.ConnectionInfo.Id.ToString("N");
+
+                        // lets setup the heartbeat
+                        ws3v_protocol.heartbeat.heartbeat_min_seconds = 30;
+                        ws3v_protocol.heartbeat.heartbeat_max_seconds = 60;
+                        ws3v_protocol.heartbeat.allow_heartbeats_when_busy = false;
 
                         // here is where we define the server-side settings
                         // in this demo we are going to simulate an api_key requirement

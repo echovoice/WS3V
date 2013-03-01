@@ -43,7 +43,7 @@ namespace WS3V
                     {
                         Thread.Sleep(protocol.authentication_timeout * 1000);
 
-                        if(!authenticated)
+                        if(!authenticated && !isterminated)
                             send_terminated(403, "Forbidden", "http://example.com/api/error#403");
 
                     }).Start();
@@ -156,8 +156,8 @@ namespace WS3V
 
         public void Dispose()
         {
-            if(!isterminated)
-                send_terminated(200, "Good bye");
+            //if(!isterminated)
+            //    send_terminated(200, "Good bye");
         }
     }
 }
