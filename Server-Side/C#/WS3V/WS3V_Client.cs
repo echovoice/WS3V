@@ -14,12 +14,14 @@ namespace WS3V
     public class WS3V_Client : IDisposable
     {
         public bool authenticated { get; set; }
+        public List<PubSub_Channel> subscriptions { get; set; }
 
         private bool isterminated = false;
         private WS3V_Protocol protocol;
 
         public WS3V_Client(WS3V_Protocol protocol)
         {
+            // connect protocol to client class
             this.protocol = protocol;
 
             // setup heartbeat if enabled
@@ -32,11 +34,15 @@ namespace WS3V
                 };
             }
 
+            // are we using credentials?
             if (protocol.credentials != null)
             {
                 authenticated = false;
+
+                // send the client the gatekeeper message
                 send_gatekeeper();
 
+                // we need to setup a thread to kill the connection on authentication timeout
                 if (protocol.authentication_timeout > 0)
                 {
                     new Thread(() =>
@@ -51,8 +57,28 @@ namespace WS3V
             }
             else
             {
+                // no authentication, authorize and send howdy
                 authenticated = true;
                 send_howdy();
+            }
+        }
+
+        // send string over socket
+        public void SocketSend(string input)
+        {
+            if(!string.IsNullOrWhiteSpace(input))
+                protocol.SocketSend(input);
+        }
+
+        // send object over socket
+        public void SocketSend(object input)
+        {
+            if (input != null)
+            {
+                string output = input.ToString();
+
+                if (!string.IsNullOrWhiteSpace(output))
+                    protocol.SocketSend(output);
             }
         }
 
@@ -108,7 +134,10 @@ namespace WS3V
         // lets tell the client what channels are availible
         public void process_channels(string[] message)
         {
-            if(
+            if (protocol.channel_listing && protocol.pubsub != null)
+            {
+                protocol.SocketSend(new listings(protocol.pubsub).ToString());
+            }
         }
 
         // this is the main processor for incoming rpc commands

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,8 @@ namespace WS3V.Interfaces
 {
     public interface IWS3V_Protocol
     {
+        ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients { get; set; }
+
         Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
         Action<string> Pub { get; set; }
         Action<string> Sub { get; set; }
@@ -21,6 +24,7 @@ namespace WS3V.Interfaces
 
         Heartbeat heartbeat { get; set; }
         Filetransfer filetransfer { get; set; }
+        PubSub_Listing pubsub { get; set; }
 
         int authentication_attempts { get; set; }
         int authentication_timeout { get; set; }

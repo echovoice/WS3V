@@ -40,48 +40,23 @@ window.onload = start;*/
 {
 	WS3Vglobal =
 	{
-		me: null,
-		net_settings: null,
-		networks: [],
-		aux_loaded: false,
-		networks_loaded: false,
-		_3v_loaded: false,
-		_3v_image_loaded: false,
-		_3vaux_loaded: false,
-		architecture_loaded: false,
-		originalTop: 0,
-		originalLeft: 0,
-		maxHeight: 0,
-		maxWidth: 0,
-		image_link_array: [],
-		video_link_array: [],
-		image_link_arrayd: [],
-		video_link_arrayd: [],
-		urls_ignore: [],
-		image_link_current: 0,
-		image_isdragging: false,
-		voice_activity: false
+
 	};
 	
 	function WS3VWebSocket(options)
 	{
 		if (!this instanceof WS3VWebSocket)
-		{
 			return new WS3VWebSocket(options);
-		}
+
 		else
 		{
 			if (!options)
-			{
 				options = {};
-			}
 	
 			this.settings = MergeDefaults(this._defaultOptions, options);
 	
 			if (!window.WebSocket)
-			{
 				throw 'UNSUPPORTED: Websockets are not supported in this browser!';
-			}
 	
 			this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
 			
@@ -309,6 +284,7 @@ window.onload = start;*/
 				if(!this.heart.busy)
 				{
 					var that = this;
+					// pump the pacemaker with the heartbeat interval
 					this.heart.pacemaker = 	setTimeout(function()
 					{
 						that.heart.lub = (new Date()).getTime();
@@ -331,6 +307,7 @@ window.onload = start;*/
       if (this.settings.DebugMode)
 		  this.Debug(vkbeautify.json(event.data), 'server');
 		
+		// extract the data and parse the JSON
 		var data = JSON.parse(event.data);
 		
 	
@@ -342,17 +319,20 @@ window.onload = start;*/
 			// this is a gatekeeper request, respond with signature
 			if(data[0] == 1)
 			{
+				// generate signature and send
 				var response = WS3VWebSocket.prototype.signature;
 				response.credentials = this.settings.Credentials;
 				this._Send(response.ToString());
 			}
 			
 			// this message is a howdy, meaning the server is ok talking to us
+			// without any sort of authentication
 			else if(data[0] == 3)
 			{
 				// validate server protocol versions match
 				if(this.protocol_version != data[2])
 				{
+					// crap, they dont match, trigger connection close and throw the error
 					this._OnClose();
 					throw 'UNSUPPORTED: WS3V Protocol Version Mismatch, Client: ' + this.protocol_version + ', Server: ' + data[2];
 					return;
@@ -365,10 +345,6 @@ window.onload = start;*/
 				// channel listing
 				if(data[7] === true)
 					this.channels = true;
-					
-				console.log(data);
-				console.log(data);
-				console.log(data);
 				
 				// check if heartbeats are enabled
 				if(data[4][0] >= 0)
@@ -384,6 +360,8 @@ window.onload = start;*/
 					if(this.heart.busy)
 					{
 						var that = this;
+						
+						// pump the pacemaker with the first beat at steady interval
 						this.heart.pacemaker = 	setInterval(function()
 						{
 							that.heart.lub = (new Date()).getTime();
@@ -395,6 +373,8 @@ window.onload = start;*/
 					else
 					{
 						var that = this;
+						
+						// pump the pacemaker with first beat and schedual
 						this.heart.pacemaker = 	setTimeout(function()
 						{
 							that.heart.lub = (new Date()).getTime();
@@ -403,6 +383,7 @@ window.onload = start;*/
 					}
 				}
 				
+				// now authenticated, call the connected callback
 				this.authenticated = true;
 				this.Connected();
 			}
@@ -423,7 +404,7 @@ window.onload = start;*/
 		switch(data[0])
 		{
 			case 6:
-				// this is a RPC response, lets find the message and fire the callback
+				// this is a RPC response, lets find the message in the queue and fire the callback
 				var message = RetrieveMessage(this.message_queue, data[1]);
 						
 				// make sure its not null
@@ -436,7 +417,7 @@ window.onload = start;*/
 			  break;
 			  
 			 case 7:
-				// this is a RPC error response, lets find the message and fire the error callback
+				// this is a RPC error response, lets find the message in the queue and fire the error callback
 				var message = RetrieveMessage(this.message_queue, data[1]);
 						
 				// make sure its not null
@@ -449,9 +430,9 @@ window.onload = start;*/
 			  break;
 			  
 			case 9:
-				// this is a listings message response	
+				// this is a listings message response
 				if (this.channel_callback instanceof Function)
-					channel_callback(data[1], data[2]);
+					this.channel_callback(data[1], data[2]);
 
 				break;
 			  
@@ -462,16 +443,18 @@ window.onload = start;*/
 
 	_OnClose: function()
 	{
+		// make sure we didnt close already
 		if(this.closed)
 			return;
-			
+		
+		// set close flag
 		this.closed = true;
 		
 		if (this.settings.DebugMode)
 			this.Debug('Connection closed.', 'client');
 
+		// set socket state and fire disconnect callback
 		this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
-
 		this.Disconnected();
 	  
 		// we need to check and remove the heartbeat intervals
@@ -486,6 +469,7 @@ window.onload = start;*/
 		}
     },
 	
+	// debug function, output pretty server and client logs
 	Debug: function(message, location)
 	{ 
 		if (this.settings.DebugMode)
@@ -493,62 +477,69 @@ window.onload = start;*/
 	}
   };
 
-  WS3VWebSocket.prototype._defaultOptions =
-  {
-    Port: 80,
-    Server: '',
-    Action: '',
-
-	Credentials: [],
-
-    Connected: function() { },
-    Disconnected: function() { },
-
-    DebugMode: false
-  };
-  
-  WS3VWebSocket.prototype.signature =
-  {
-    type: 2,
-    credentials: [],
-	
-    ToString: function()
+	// default options for the WS3V Websocket
+	WS3VWebSocket.prototype._defaultOptions =
 	{
-		return [this.type, this.credentials];	
-	}
-  };
-
-  function MergeDefaults(o1, o2)
-  {
-    var o3 = {};
-    var p = {};
-
-    for (p in o1)
-      o3[p] = o1[p];
-
-    for (p in o2)
-      o3[p] = o2[p];
-
-    return o3;
-  }
+		Port: 80,
+		Server: '',
+		Action: '',
+		
+		Credentials: [],
+		
+		Connected: function() { },
+		Disconnected: function() { },
+		
+		DebugMode: false
+	};
   
+	WS3VWebSocket.prototype.signature =
+	{
+		type: 2,
+		credentials: [],
+	
+		ToString: function()
+		{
+			return [this.type, this.credentials];	
+		}
+	};
+
+	// used to itterate over the supplied instance and set defaults
+	// basically a poormans constructor with a default object
+	function MergeDefaults(o1, o2)
+	{
+		var o3 = {};
+		var p = {};
+	
+		// load defaults
+		for (p in o1)
+			o3[p] = o1[p];
+	
+		// overwrite with provided settings
+		for (p in o2)
+			o3[p] = o2[p];
+	
+		return o3;
+	}
+  
+	// little trick to remove a queued message by id and return the message for processing
+	// used to simulate guranteed response in an async enviornment
   	function RetrieveMessage(array, id)
 	{
     	for (var i = 0, len = array.length; i < len; i++)
 		{
 			if (array[i].id == id)
-			{
 				return array.splice(i, 1);
-			}
     	}
     	return null;
 	}
 
-  window.WS3VWebSocket = WS3VWebSocket;
-  window.MergeDefaults = MergeDefaults;
-  window.RetrieveMessage = RetrieveMessage;
-
-  if(window.MozWebSocket)
-    window.WebSocket = MozWebSocket;
+	// attach these objects to the window
+	window.WS3VWebSocket = WS3VWebSocket;
+	window.MergeDefaults = MergeDefaults;
+	window.RetrieveMessage = RetrieveMessage;
+	
+	// oh firefox, way to pull an ie.. no wonder people don't like you anymore
+	if(window.MozWebSocket)
+		window.WebSocket = MozWebSocket;
 
 })(window);

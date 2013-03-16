@@ -28,6 +28,25 @@ namespace WS3V.JSON
             return sb.ToString();
         }
 
+        public static string EncodeJsObjectArray(string[] s)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append('[');
+            if (s != null && s.Length > 0)
+            {
+                for (int i = 0; i < s.Length; i++)
+                {
+                    if (i > 0)
+                        sb.Append(',');
+
+                    sb.Append(s[i]);
+                }
+            }
+            sb.Append(']');
+
+            return sb.ToString();
+        }
+
 
         /// Credit http://www.west-wind.com/weblog/posts/2007/Jul/14/Embedding-JavaScript-Strings-from-an-ASPNET-Page
         /// 

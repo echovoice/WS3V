@@ -25,6 +25,15 @@ namespace Chat_Room_Sample
             rooms.Add(new Room("<3 Phil Collins", "In the air tonight, each and every night."));
             rooms.Add(new Room("80's Music Fans ONLY!", "If you love 80's music come chat."));
 
+            // this is how channel control is handled outside the app
+            // use this object to populate channels for channel listing
+
+            PubSub_Listing pubsub = new PubSub_Listing();
+            for (int i = 0; i < rooms.Count; i++)
+			{
+                pubsub.CreateChannel("/public/chatrooms/A" + i, rooms[i]);
+			}
+
             // create the fleck websocket server
             // see https://github.com/statianzo/Fleck for more information
             FleckLog.Level = LogLevel.Debug;
@@ -56,33 +65,11 @@ namespace Chat_Room_Sample
                         // enable channel listing
                         ws3v_protocol.channel_listing = true;
 
-                        // lets wire up the rpc commands
-                        /*ws3v_protocol.RPC = (x) =>
-                        {
-                            if (x.uri == "/user/playlist/bestofphil")
-                            {
-                                if (x.method == "GET")
-                                {
-                                    // send the playlist
-                                    return new RPC_Outgoing(playlist);
-                                }
-                                else if (x.method == "DELETE")
-                                {
-                                    // delete the song
-                                    playlist.removeSong(x.parameters);
-                                    return new RPC_Outgoing("done");
-                                }
-                                else if (x.method == "POST")
-                                {
-                                    // add the song
-                                    string[] song = JSONDecoders.DecodeJSONArray(x.parameters);
-                                    playlist.addSong(new Song(song[2], song[3], song[1], song[0]));
-                                    return new RPC_Outgoing("done");
-                                }
-                            }
+                        // lets wire up the channel listing command
+                        ws3v_protocol.pubsub = pubsub;
 
-                            throw new RPC_Exception(400, "Bad Request", "http://example.com/api/error#400");
-                        };*/
+                        // we need to pass in the cocurrent dictionary for PubSub to work
+                        ws3v_protocol.WS3V_Clients = WS3V_Clients;
 
                     }));
 
@@ -110,7 +97,20 @@ namespace Chat_Room_Sample
             Console.WriteLine("\r\n\r\nServer-side is now running, please open the Client-side sample file:");
             Console.WriteLine("\r\n\t\\Client-side\\JS\\Samples\\Chat Room Sample\\client.html");
 
+            Console.WriteLine("\r\ntype anything into the console to blast a message to all chat rooms");
             string input = Console.ReadLine();
+            while (input != "exit")
+            {
+                for (int i = 0; i < pubsub.channels.Count; i++)
+                {
+                    List<WS3V_Client> subscribers = WS3V_Clients.Select(t => t.Value).Where(c => c.subscriptions != null && c.subscriptions.Any(p => p.channel_name_or_uri == pubsub.channels[i].channel_name_or_uri)).ToList();
+                    
+                    for (int j = 0; j < subscribers.Count; j++)
+                        subscribers[j].SocketSend(input);
+
+                }
+                input = Console.ReadLine();
+            }
         }
     }
 }

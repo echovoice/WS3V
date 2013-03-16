@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,9 +16,9 @@ namespace WS3V
     
     public class WS3V_Protocol : IWS3V_Protocol
     {
+        public ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients { get; set; }
+
         public Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
-        public Action<string> Channels { get; set; }
-        public Action<string> SubscribeChannel { get; set; }
         public Action<string> Pub { get; set; }
         public Action<string> Sub { get; set; }
         public Action<string> SocketSend { get; set; }
@@ -29,6 +30,7 @@ namespace WS3V
 
         public Heartbeat heartbeat { get; set; }
         public Filetransfer filetransfer { get; set; }
+        public PubSub_Listing pubsub { get; set; }
 
         public int authentication_attempts { get; set; }
         public int authentication_timeout { get; set; }
@@ -44,6 +46,8 @@ namespace WS3V
 
         public WS3V_Protocol(Action<IWS3V_Protocol> _config)
         {
+            WS3V_Clients = null;
+
             RPC = x => { return new RPC_Outgoing(); };
             Pub = x => { };
             Sub = x => { };
@@ -53,6 +57,7 @@ namespace WS3V
             clientID = string.Empty;
             heartbeat = new Heartbeat();
             filetransfer = new Filetransfer();
+            pubsub = null;
 
             authentication_attempts = 3;
             authentication_timeout = 5;

@@ -176,7 +176,7 @@ namespace WS3V.Tests
         public void listings()
         {
             // documentation example 1
-            PubSub_Core core = new PubSub_Core();
+            PubSub_Listing core = new PubSub_Listing();
             core.CreateChannel("/public/chatrooms/A21", "The Best Chat Room");
             core.CreateChannel("/public/chatrooms/A22", "<3 Phil Collins");
             core.CreateChannel("/public/chatrooms/B12", "80's Music Fans ONLY!");
@@ -185,6 +185,80 @@ namespace WS3V.Tests
             string expected = "[9,[\"\\/public\\/chatrooms\\/A21\",\"\\/public\\/chatrooms\\/A22\",\"\\/public\\/chatrooms\\/B12\"],[\"The Best Chat Room\",\"\\u003C3 Phil Collins\",\"80's Music Fans ONLY!\"]]";
             string result = l.ToString();
             Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void subscribe()
+        {
+            // example 1
+            string input = "[10,[\"\\/rss\\/news\\/latest\"]]";
+            string[] message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "10");
+
+            subscribe s = new subscribe(message);
+            Assert.AreEqual(s.channel_name_or_uri[0], "/rss/news/latest");
+
+            // example 2
+            input = "[10,[\"\\/rss\\/news\\/latest\",\"\\/user\\/28\\/comments\",\"\\/user\\/29\\/comments\"],[{\"category\": \"technology\"},{\"public\": true,\"private\": false},{\"public\": false,\"private\": true}]]";
+            message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "10");
+
+            s = new subscribe(message);
+            Assert.AreEqual(s.channel_name_or_uri[0], "/rss/news/latest");
+            Assert.AreEqual(s.channel_name_or_uri[1], "/user/28/comments");
+            Assert.AreEqual(s.channel_name_or_uri[2], "/user/29/comments");
+        }
+
+        [TestMethod]
+        public void acknowledge()
+        {
+            // documentation example 1
+            PubSub_Listing core = new PubSub_Listing();
+            core.CreateChannel("/rss/news/latest");
+
+            acknowledge a = new acknowledge(core.channels[0]);
+            string expected = "[11,\"\\/rss\\/news\\/latest\"]";
+            string result = a.ToString();
+            Assert.AreEqual(expected, result);
+
+            // documentation example 2
+            a.allow_publishing = true;
+            expected = "[11,\"\\/rss\\/news\\/latest\",true]";
+            result = a.ToString();
+            Assert.AreEqual(expected, result);
+
+            a.allow_publishing = false;
+            a.channel.Set_Max(99);
+            for (int i = 0; i < 120; i++)
+            {
+                a.channel.add_event("test");
+            }
+            PubSub_Event e = new PubSub_Event("test old", 41267360);
+            a.channel.add_event(e);
+            expected = "[11,\"\\/rss\\/news\\/latest\",false,99,41267360]";
+        }
+
+        [TestMethod]
+        public void prepopulate()
+        {
+            // documentation example 1
+            string input = "[12,\"\\/rss\\/news\\/latest\",50]";
+            string[] message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "12");
+
+            prepopulate p = new prepopulate(message);
+            Assert.AreEqual(p.channel_name_or_uri, "/rss/news/latest");
+            Assert.AreEqual(p.count, 50);
+
+            // documentation example 2
+            input = "[12,\"\\/rss\\/news\\/latest\",50,41267360]";
+            message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "12");
+
+            p = new prepopulate(message);
+            Assert.AreEqual(p.channel_name_or_uri, "/rss/news/latest");
+            Assert.AreEqual(p.count, 50);
+            Assert.AreEqual(p.timestamp, 41267360);
         }
 
         [TestMethod]

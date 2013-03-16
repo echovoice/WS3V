@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace WS3V.Support
 {
-    public class PubSub_Core
+    public class PubSub_Listing
     {
         public List<PubSub_Channel> channels { get; set; }
 
-        public PubSub_Core()
+        public PubSub_Listing()
         {
             channels = new List<PubSub_Channel>();
         }
@@ -21,6 +21,11 @@ namespace WS3V.Support
         }
 
         public void CreateChannel(string channel_name_or_uri, string channel_meta)
+        {
+            channels.Add(new PubSub_Channel(channel_name_or_uri, channel_meta));
+        }
+
+        public void CreateChannel(string channel_name_or_uri, object channel_meta)
         {
             channels.Add(new PubSub_Channel(channel_name_or_uri, channel_meta));
         }

@@ -17,14 +17,14 @@ namespace WS3V.MessageTypes
     {
         private const int id = 9;
 
-        public PubSub_Core core { get; set; }
+        public PubSub_Listing core { get; set; }
         
         public listings()
         {
-            core = new PubSub_Core();
+            core = new PubSub_Listing();
         }
 
-        public listings(PubSub_Core core)
+        public listings(PubSub_Listing core)
         {
             this.core = core;
         }
@@ -40,7 +40,7 @@ namespace WS3V.MessageTypes
             if (core.HasMeta())
             {
                 sb.Append(',');
-                sb.Append(JSONEncoders.EncodeJsStringArray(core.GetMeta()));
+                sb.Append(JSONEncoders.EncodeJsObjectArray(core.GetMeta()));
             }
 
             sb.Append(']');
