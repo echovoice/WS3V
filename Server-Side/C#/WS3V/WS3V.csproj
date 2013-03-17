@@ -43,10 +43,15 @@
     <Compile Include="Interfaces\IWS3V_Protocol.cs" />
     <Compile Include="MessageTypes\channels.cs" />
     <Compile Include="MessageTypes\acknowledge.cs" />
+    <Compile Include="MessageTypes\event.cs" />
+    <Compile Include="MessageTypes\publish.cs" />
+    <Compile Include="MessageTypes\unsubscribe.cs" />
+    <Compile Include="MessageTypes\deny.cs" />
     <Compile Include="MessageTypes\prepopulate.cs" />
     <Compile Include="MessageTypes\subscribe.cs" />
     <Compile Include="MessageTypes\listings.cs" />
     <Compile Include="Support\3vEpoch.cs" />
+    <Compile Include="Support\PubSub Exception.cs" />
     <Compile Include="Support\PubSub Event.cs" />
     <Compile Include="Support\PubSub Channel.cs" />
     <Compile Include="Support\PubSub Listing.cs" />

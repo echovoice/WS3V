@@ -20,13 +20,15 @@ namespace WS3V.MessageTypes
         public PubSub_Channel channel { get; set; }
         public bool allow_publishing { get; set; }
 
-        public acknowledge(string channel_name_or_uri)
+        public acknowledge(string channel_name_or_uri, bool allow_publishing)
         {
+            this.allow_publishing = allow_publishing;
             channel = new PubSub_Channel(channel_name_or_uri);
         }
 
-        public acknowledge(PubSub_Channel channel)
+        public acknowledge(PubSub_Channel channel, bool allow_publishing)
         {
+            this.allow_publishing = allow_publishing;
             this.channel = channel;
         }
 

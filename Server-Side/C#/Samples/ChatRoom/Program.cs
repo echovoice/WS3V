@@ -25,13 +25,20 @@ namespace Chat_Room_Sample
             rooms.Add(new Room("<3 Phil Collins", "In the air tonight, each and every night."));
             rooms.Add(new Room("80's Music Fans ONLY!", "If you love 80's music come chat."));
 
-            // this is how channel control is handled outside the app
+            // this is how channel control is handled outside the socket definition
             // use this object to populate channels for channel listing
 
             PubSub_Listing pubsub = new PubSub_Listing();
             for (int i = 0; i < rooms.Count; i++)
 			{
-                pubsub.CreateChannel("/public/chatrooms/A" + i, rooms[i]);
+                // create the pubsub channel
+                PubSub_Channel c = new PubSub_Channel("/public/chatrooms/A" + i, rooms[i]);
+                
+                // save 100 of the oldest chats per chatroom
+                c.Set_Max(100);
+
+                // add the channel to the pubsub control
+                pubsub.CreateChannel(c);
 			}
 
             // create the fleck websocket server
@@ -65,11 +72,21 @@ namespace Chat_Room_Sample
                         // enable channel listing
                         ws3v_protocol.channel_listing = true;
 
-                        // lets wire up the channel listing command
+                        // lets wire up the pubsub listing, this is required for all pubsub opperations
+                        // even if listing is not enabled, not passing in the pubsub listing object
+                        // will disable pubsub completely and block clients from subscribing
                         ws3v_protocol.pubsub = pubsub;
 
                         // we need to pass in the cocurrent dictionary for PubSub to work
                         ws3v_protocol.WS3V_Clients = WS3V_Clients;
+
+                        // this demo wont use this, but this is how to pass dynamic channels into
+                        // the server, channels created based on the subscription request
+                        ws3v_protocol.Subscribe = channel_name_or_uri =>
+                        {
+                            // inside here based on the channel name and filter a subscription
+                            // could be created and added to the pubsub object
+                        };
 
                     }));
 

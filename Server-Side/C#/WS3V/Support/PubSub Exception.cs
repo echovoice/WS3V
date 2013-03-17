@@ -7,34 +7,34 @@ using WS3V.JSON;
 
 namespace WS3V.Support
 {
-    public class RPC_Exception : Exception
+    public class PubSub_Exception : Exception
     {
         public int code { get; set; }
         public string message { get; set; }
         public string url { get; set; }
 
-        public RPC_Exception()
+        public PubSub_Exception()
         {
             code = 0;
             message = string.Empty;
             url = string.Empty;
         }
 
-        public RPC_Exception(int code)
+        public PubSub_Exception(int code)
         {
             this.code = code;
             message = string.Empty;
             url = string.Empty;
         }
 
-        public RPC_Exception(int code, string message)
+        public PubSub_Exception(int code, string message)
         {
             this.code = code;
             this.message = message;
             url = string.Empty;
         }
 
-        public RPC_Exception(int code, string message, string url)
+        public PubSub_Exception(int code, string message, string url)
         {
             this.code = code;
             this.message = message;

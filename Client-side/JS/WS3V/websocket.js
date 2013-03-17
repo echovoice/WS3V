@@ -88,6 +88,26 @@ window.onload = start;*/
 			return [this.type, this.id.toString(), this.method, this.uri, this.parameters];
 	};
 	
+	function WS3VWebSocket_publish(props)
+	{
+		// http://ws3v.org/spec.json#publish
+		this.type = 15;
+		
+		props = props || {};
+		this.uri = props.uri || '';
+		this.message = props.message || '';
+		this.echo = props.echo || false;
+	}
+	
+	WS3VWebSocket_publish.prototype.ToString = function()
+	{
+		if(this.echo)
+			return [this.type, this.uri, this.message, this.echo];
+				
+		else
+			return [this.type, this.uri, this.message];
+	};
+	
 	function WS3VWebSocket_channels(props)
 	{
 		// http://ws3v.org/spec.json#channels
@@ -112,7 +132,47 @@ window.onload = start;*/
 		else
 			return [this.type, this.meta, this.filter];
 	};
-
+	
+	function WS3VWebSocket_subscription(props)
+	{
+		props = props || {};
+		this.uri = (props.uri == null || typeof props.uri == 'undefined' || props.uri == '') ? '' : props.uri;
+		this.filter = (props.filter == null || typeof props.filter == 'undefined' || props.filter == '') ? '' : props.filter;
+		this.connected = (props.connected == null || typeof props.connected != 'function') ? function(data){} : props.connected;
+		this.events = (props.events == null || typeof props.events != 'function') ? function(data){} : props.events;
+		this.deny = (props.deny == null || typeof props.deny != 'function') ? function(error, description, url){} : props.deny;
+	}
+	
+	function WS3VWebSocket_subscribe(props)
+	{
+		// http://ws3v.org/spec.json#subscribe
+		this.type = 10;
+		
+		props = props || {};
+		this.uri = props.uri || [];
+		this.filter = props.filter || [];
+		this.connected = props.connected || [];
+		this.events = props.events || [];
+		this.deny = props.deny || [];
+	}
+	
+	WS3VWebSocket_subscribe.prototype.ToString = function()
+	{		
+		if(this.filter == null || typeof this.filter == 'undefined' || this.filter.length <= 0)
+			return [this.type, this.uri];
+		else
+			return [this.type, this.uri, this.filter];
+	};
+	
+	function WS3VWebSocket_event(data)
+	{
+		// http://ws3v.org/spec.json#event
+		
+		data = data || {};
+		this.message = data[2] || '';
+		this.timestamp = data[3] || 0;
+		this.timestamp = new Date((this.timestamp + 1308823200)*1000);
+	}
 
   WS3VWebSocket.prototype =
   {
@@ -141,6 +201,7 @@ window.onload = start;*/
 	closed: false,
 	
 	message_queue: [],
+	subscriptions: [],
 	
 	heart:
 	{
@@ -202,6 +263,41 @@ window.onload = start;*/
 
 		var message = new WS3VWebSocket_channels(props);
 		this.channel_callback = message.callback;
+		this._Send(message.ToString());
+	},
+	
+	Subscribe: function(props)
+	{
+		// make sure websocket is still open
+		if(this.closed)
+			return;
+
+		// create the subscribe message object
+		var message = new WS3VWebSocket_subscribe(props);
+		
+		// subscribe is unique as it takes an array of subscriptions
+		for (var i = 0, len = message.uri.length; i < len; i++)
+			// this builds the unique subscription object for callback tracking
+			this.subscriptions.push(new WS3VWebSocket_subscription({uri:message.uri[i],filter:message.filter[i],connected:message.connected[i],events:message.events[i],deny:message.deny[i]}));
+			
+		// send the subscribe command to the server
+		this._Send(message.ToString());
+	},
+	
+	Publish: function(props)
+	{
+		// make sure websocket is still open
+		if(this.closed)
+			return;
+			
+		// todo, check if subscribed to channel, if not issue subscription command
+		// and in connected callback fire the publish message
+		// the problem would be where to hook event callback so this might not work
+
+		// create the publish message object
+		var message = new WS3VWebSocket_publish(props);
+					
+		// send the publish command to the server
 		this._Send(message.ToString());
 	},
 	
@@ -268,7 +364,7 @@ window.onload = start;*/
     _OnMessage: function(event)
 	{
 
-      var instance = this;
+      var that = this;
 
 		// check for heartbeat message
 		if(event.data == 'dub')
@@ -283,7 +379,6 @@ window.onload = start;*/
 				// otherwise the interval pacemaker should already be alive and kicking
 				if(!this.heart.busy)
 				{
-					var that = this;
 					// pump the pacemaker with the heartbeat interval
 					this.heart.pacemaker = 	setTimeout(function()
 					{
@@ -358,9 +453,7 @@ window.onload = start;*/
 					// seems the server doesnt care if we heartbeat at a steady interval
 					// to collect latency diagnostic data.. so lets do it!
 					if(this.heart.busy)
-					{
-						var that = this;
-						
+					{	
 						// pump the pacemaker with the first beat at steady interval
 						this.heart.pacemaker = 	setInterval(function()
 						{
@@ -372,8 +465,6 @@ window.onload = start;*/
 					// we need to setup the timeout mode
 					else
 					{
-						var that = this;
-						
 						// pump the pacemaker with first beat and schedual
 						this.heart.pacemaker = 	setTimeout(function()
 						{
@@ -401,9 +492,11 @@ window.onload = start;*/
 		}
 		
 		// so we are authenticated, lets see what the server sent us
+		// http://ws3v.org/spec.json
 		switch(data[0])
 		{
 			case 6:
+			
 				// this is a RPC response, lets find the message in the queue and fire the callback
 				var message = RetrieveMessage(this.message_queue, data[1]);
 						
@@ -414,9 +507,10 @@ window.onload = start;*/
 						message[0].callback(data[2]);
 				}
 				
-			  break;
+				break;
 			  
 			 case 7:
+			 
 				// this is a RPC error response, lets find the message in the queue and fire the error callback
 				var message = RetrieveMessage(this.message_queue, data[1]);
 						
@@ -427,12 +521,39 @@ window.onload = start;*/
 						message[0].error(data[2], data[3], data[4]);
 				}
 				
-			  break;
+				break;
 			  
 			case 9:
+			
 				// this is a listings message response
 				if (this.channel_callback instanceof Function)
 					this.channel_callback(data[1], data[2]);
+
+				break;
+				
+			case 11:
+				// this is a acknowledge message response
+				var subscription = GetSubscription(this.subscriptions, data[1], false);
+					
+				// make sure its not null
+				if(typeof subscription != "undefined")
+				{
+					if (subscription.connected instanceof Function)
+						subscription.connected(data);
+				}
+
+				break;
+				
+			case 16:
+				// event from a subscription
+				var subscription = GetSubscription(this.subscriptions, data[1], false);
+					
+				// make sure its not null
+				if(typeof subscription != "undefined")
+				{
+					if (subscription.events instanceof Function)
+						subscription.events(new WS3VWebSocket_event(data));
+				}
 
 				break;
 			  
@@ -529,6 +650,22 @@ window.onload = start;*/
 		{
 			if (array[i].id == id)
 				return array.splice(i, 1);
+    	}
+    	return null;
+	}
+	
+	// used to pull or remove a subscription based on uri
+  	function GetSubscription(array, uri, remove)
+	{
+    	for (var i = 0, len = array.length; i < len; i++)
+		{
+			if (array[i].uri == uri)
+			{
+				if(remove)
+					return array.splice(i, 1);
+				else
+					return array[i];
+			}
     	}
     	return null;
 	}

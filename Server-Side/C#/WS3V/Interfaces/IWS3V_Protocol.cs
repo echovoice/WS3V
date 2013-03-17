@@ -13,6 +13,7 @@ namespace WS3V.Interfaces
         ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients { get; set; }
 
         Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
+        Action<string> Subscribe { get; set; }
         Action<string> Pub { get; set; }
         Action<string> Sub { get; set; }
         Action<string> SocketSend { get; set; }

@@ -216,7 +216,7 @@ namespace WS3V.Tests
             PubSub_Listing core = new PubSub_Listing();
             core.CreateChannel("/rss/news/latest");
 
-            acknowledge a = new acknowledge(core.channels[0]);
+            acknowledge a = new acknowledge(core.channels[0], false);
             string expected = "[11,\"\\/rss\\/news\\/latest\"]";
             string result = a.ToString();
             Assert.AreEqual(expected, result);
@@ -259,6 +259,74 @@ namespace WS3V.Tests
             Assert.AreEqual(p.channel_name_or_uri, "/rss/news/latest");
             Assert.AreEqual(p.count, 50);
             Assert.AreEqual(p.timestamp, 41267360);
+        }
+
+        [TestMethod]
+        public void deny()
+        {
+            // documentation example 1
+            deny d = new deny("/rss/news/latest", new PubSub_Exception(404));
+            string expected = "[13,\"\\/rss\\/news\\/latest\",[404]]";
+            string result = d.ToString();
+            Assert.AreEqual(expected, result);
+
+            // documentation example 2
+            d = new deny("/rss/news/latest", new PubSub_Exception(404, "channel not found", "http://example.com/api/error#404"));
+            expected = "[13,\"\\/rss\\/news\\/latest\",[404,\"channel not found\",\"http:\\/\\/example.com\\/api\\/error#404\"]]";
+            result = d.ToString();
+            Assert.AreEqual(expected, result);
+        }
+
+        [TestMethod]
+        public void unsubscribe()
+        {
+            // documentation example 1
+            string input = "[14,\"\\/rss\\/news\\/latest\"]";
+            string[] message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "14");
+
+            unsubscribe u = new unsubscribe(message);
+            Assert.AreEqual(u.channel_name_or_uri, "/rss/news/latest");
+        }
+
+        [TestMethod]
+        public void publish()
+        {
+            // documentation example 1
+            string input = "[15,\"\\/public\\/chatrooms\\/A\\/22\",\"best day ever was when I first heard phil on the radio\"]";
+            string[] message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "15");
+
+            publish p = new publish(message);
+            Assert.AreEqual(p.channel_name_or_uri, "/public/chatrooms/A/22");
+            Assert.AreEqual(p.message, "best day ever was when I first heard phil on the radio");
+            Assert.AreEqual(p.echo, false);
+
+            // documentation example 2
+            input = "[15,\"\\/public\\/chatrooms\\/A\\/22\",{\"message\":\"best day ever was when I first heard phil on the radio\",\"priority\":\"urgent\"},true]";
+            message = JSONDecoders.DecodeJSONArray(input);
+            Assert.AreEqual(message[0], "15");
+
+            p = new publish(message);
+            Assert.AreEqual(p.channel_name_or_uri, "/public/chatrooms/A/22");
+            Assert.AreEqual(p.message, "{\"message\":\"best day ever was when I first heard phil on the radio\",\"priority\":\"urgent\"}");
+            Assert.AreEqual(p.echo, true);
+        }
+
+        [TestMethod]
+        public void _event()
+        {
+            // documentation example 1
+            _event e = new _event("/rss/news/latest", new PubSub_Event("Singer Phil Collins Announces Retirement", 41267360));
+            string expected = "[16,\"\\/rss\\/news\\/latest\",\"Singer Phil Collins Announces Retirement\",41267360]";
+            string result = e.ToString();
+            Assert.AreEqual(expected, result);
+
+            // documentation example 2
+            e = new _event("/rss/news/latest", new PubSub_Event("{\"title\":\"Singer Phil Collins Announces Retirement\",\"description\":\"Phil Collins has decided to end his career after ...\",\"url\":\"http:\\/\\/examplenews.co.uk\\/phil-collins-announces-retirement\"}", 41267360));
+            expected = "[16,\"\\/rss\\/news\\/latest\",{\"title\":\"Singer Phil Collins Announces Retirement\",\"description\":\"Phil Collins has decided to end his career after ...\",\"url\":\"http:\\/\\/examplenews.co.uk\\/phil-collins-announces-retirement\"},41267360]";
+            result = e.ToString();
+            Assert.AreEqual(expected, result);
         }
 
         [TestMethod]

@@ -19,6 +19,7 @@ namespace WS3V
         public ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients { get; set; }
 
         public Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
+        public Action<string> Subscribe { get; set; }
         public Action<string> Pub { get; set; }
         public Action<string> Sub { get; set; }
         public Action<string> SocketSend { get; set; }
@@ -49,6 +50,7 @@ namespace WS3V
             WS3V_Clients = null;
 
             RPC = x => { return new RPC_Outgoing(); };
+            Subscribe = x => { };
             Pub = x => { };
             Sub = x => { };
             SocketSend = x => { };

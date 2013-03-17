@@ -20,10 +20,10 @@
 	function getListing()
 	{
 		// make sure websocket is open and supports channels
-		if(RESTfulAPI.SocketState == WS3VWebSocket.prototype.SocketStates.Open && RESTfulAPI.channels)
+		if(PubSub.SocketState == WS3VWebSocket.prototype.SocketStates.Open && PubSub.channels)
 		{
 			// this is how a request looks, it is based on async "promises", which states that eventually the request will return a value
-			RESTfulAPI.Channels(
+			PubSub.Channels(
 			{
 				// if the request works
 				callback: function(channels, meta)
@@ -34,15 +34,76 @@
 		}
 	};
 	
-	function leave(id)
+	function leave(id, uri)
 	{
 		document.getElementById(id + '_messages').innerHTML = "";
-		document.getElementById(id + '_controls').innerHTML = "<input id=\"join\" onclick=\"joinroom('" + id + "')\" type=\"button\" value=\"Join Room\">";
+		document.getElementById(id + '_controls').innerHTML = "<input id=\"join\" onclick=\"joinroom('" + id + "','"+uri+"')\" type=\"button\" value=\"Join Room\">";
 	};
 	
-	function joinroom(id)
+	function send(id, uri)
 	{
-		document.getElementById(id + '_controls').innerHTML = "<input required id=\"" + id + "_message\" size=\"32\" placeholder=\"message\"/><input id=\"add\" onclick=\"send('" + id + "')\" type=\"button\" value=\"Send\"><input id=\"add\" onclick=\"leave('" + id + "')\" type=\"button\" value=\"Leave Room\">";
+		// make sure websocket is open
+		if(PubSub.SocketState == WS3VWebSocket.prototype.SocketStates.Open)
+		{
+			// publish the message to the specified channel
+			PubSub.Publish(
+			{
+				message: 
+				{
+					message: document.getElementById(id + '_message').value,
+					client: PubSub.session_id
+				},
+				uri: uri,
+				echo: true
+			});
+			
+			// clear textbox
+			document.getElementById(id + '_message').value = '';
+		}
+	}
+	
+	function joinroom(id, uri)
+	{
+		// this is how a channel subscription works
+		// notice how each parameter is an array, the spec states subscription allows multiple
+		// channel subscriptions with the same command
+		PubSub.Subscribe({
+			uri:
+			[
+				uri
+			],
+			
+			// if the channel exists and allow subscription
+			// this is the call back that will fire
+			connected:
+			[
+				function(data)
+				{
+					document.getElementById(id + '_controls').innerHTML = "<input required id=\"" + id + "_message\" size=\"32\" placeholder=\"message\"/><input id=\"add\" onclick=\"send('" + id + "','" + uri + "')\" type=\"button\" value=\"Send\"><input id=\"add\" onclick=\"leave('" + id + "','"+uri+"')\" type=\"button\" value=\"Leave Room\">";
+				}
+			],
+			
+			// when connected this will fire on new messages (events) published to the channel
+			events:
+			[
+				function(data)
+				{
+					document.getElementById(id + '_messages').innerHTML = "<br /><strong>"+((data.message.client == PubSub.session_id) ? "me" : data.message.client)+":</strong> "+data.message.message + document.getElementById(id + '_messages').innerHTML;
+				}
+			],
+			
+			// if we are denied access to the channel
+			// this is the callback that will fire
+			deny:
+			[
+				function(error, description, url)
+				{
+					console.log(error);
+					console.log(description);
+					console.log(url);
+				}
+			]
+		});	
 	};
 	
 	function createRooms(channels, meta)
@@ -50,7 +111,7 @@
 		var html = '';
 		
 		for (var i=0; i < channels.length; i++)
-			html = html + '<div style="width:33%; float:left;"><div><i>'+channels[i]+'</i></div><div><strong>'+meta[i][0]+'</strong></div><div>'+meta[i][1]+'</div><div id="R'+i+'_messages"></div><div id="R'+i+'_controls"><input id="join" onclick="joinroom(\'R'+i+'\')" type="button" value="Join Room"></div></div>';
+			html = html + '<div style="width:33%; float:left;"><div><i>'+channels[i]+'</i></div><div><strong>'+meta[i][0]+'</strong></div><div>'+meta[i][1]+'</div><div id="R'+i+'_messages"></div><div id="R'+i+'_controls"><input id="join" onclick="joinroom(\'R'+i+'\',\''+channels[i]+'\')" type="button" value="Join Room"></div></div>';
         
 		document.getElementById('rooms').innerHTML = html;
 	}
@@ -58,7 +119,7 @@
 	function websocket()
 	{	
 		// build the WS3V WebSocket
-		RESTfulAPI = new WS3VWebSocket
+		PubSub = new WS3VWebSocket
 		({ 
 			Server: "127.0.0.1",
 			Port: 8181,
@@ -68,19 +129,19 @@
 		
 		
 		
-		RESTfulAPI.Connected = function()
+		PubSub.Connected = function()
 		{
 			getListing();
 			console.log("connected");
 		};
 		
-		RESTfulAPI.Disconnected = function()
+		PubSub.Disconnected = function()
 		{
 			console.log("good bye");
 		};
 		
 		// start the connection
-		RESTfulAPI.Connect();
+		PubSub.Connect();
 	}
 	
 	websocket();

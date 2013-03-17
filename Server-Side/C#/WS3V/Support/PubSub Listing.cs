@@ -20,6 +20,11 @@ namespace WS3V.Support
             channels.Add(new PubSub_Channel(channel_name_or_uri));
         }
 
+        public void CreateChannel(PubSub_Channel channel)
+        {
+            channels.Add(channel);
+        }
+
         public void CreateChannel(string channel_name_or_uri, string channel_meta)
         {
             channels.Add(new PubSub_Channel(channel_name_or_uri, channel_meta));
@@ -40,9 +45,22 @@ namespace WS3V.Support
             return channels.Select(c => c.channel_name_or_uri).ToArray();
         }
 
+        public PubSub_Channel GetChannel(string channel_name_or_uri)
+        {
+            if (HasChannel(channel_name_or_uri))
+                return channels.Where(c => c.channel_name_or_uri == channel_name_or_uri).FirstOrDefault();
+            else
+                return null;
+        }
+
         public bool HasMeta()
         {
             return channels.Any(c => c.channel_meta != null);
+        }
+
+        public bool HasChannel(string channel_name_or_uri)
+        {
+            return channels.Any(c => c.channel_name_or_uri == channel_name_or_uri);
         }
 
         public string[] GetMeta()

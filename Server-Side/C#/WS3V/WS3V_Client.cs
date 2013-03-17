@@ -124,6 +124,16 @@ namespace WS3V
                         process_channels(message);
                         return;
 
+                    // channel subscribe command
+                    case 10:
+                        subscribe_channel(message);
+                        return;
+
+                    // channel publish command
+                    case 15:
+                        publish_channel(message);
+                        return;
+
                 }
             }
 
@@ -137,6 +147,96 @@ namespace WS3V
             if (protocol.channel_listing && protocol.pubsub != null)
             {
                 protocol.SocketSend(new listings(protocol.pubsub).ToString());
+            }
+        }
+
+        // publish a message to a channel
+        public void publish_channel(string[] message)
+        {
+            // extract publish information
+            publish p = new publish(message);
+
+            if (protocol.pubsub != null)
+            {
+                // attempt to pull the channel from pubsub
+                PubSub_Channel c = protocol.pubsub.GetChannel(p.channel_name_or_uri);
+
+                // make sure channel exists
+                if (c != null)
+                {
+                    // create the pubsub event
+                    PubSub_Event e = new PubSub_Event(p.message);
+
+                    // add the event to the channel
+                    c.add_event(e);
+
+                    // generate event object
+                    _event ev = new _event(p.channel_name_or_uri, e);
+
+                    // setup subscribers list
+                    List<WS3V_Client> subscribers;
+
+                    if (p.echo)
+                        // blast the event to all subscribed
+                        subscribers = protocol.WS3V_Clients.Select(g => g.Value).Where(s => s.subscriptions != null && s.subscriptions.Any(y => y.channel_name_or_uri == p.channel_name_or_uri)).ToList();
+
+                    else
+                        // blast the event to all subscribed except current client
+                        subscribers = protocol.WS3V_Clients.Select(g => g.Value).Where(s => s.protocol.clientID != protocol.clientID && s.subscriptions != null && s.subscriptions.Any(y => y.channel_name_or_uri == p.channel_name_or_uri)).ToList();
+
+                    // serialize event
+                    string msg = ev.ToString();
+
+                    // loop over clients and send message blast
+                    for (int i = 0; i < subscribers.Count; i++)
+                        subscribers[i].SocketSend(msg);
+                }
+                
+            }
+        }
+
+        // subscribes a client to a channel
+        public void subscribe_channel(string[] message)
+        {
+            // extract subscription(s) requested
+            subscribe s = new subscribe(message);
+
+            // pubsub enabled
+            if (protocol.pubsub != null)
+            {
+                // itterate over the channels requested by the client
+                for (int i = 0; i < s.channel_name_or_uri.Length; i++)
+                {
+                    // call the dynamic subscription builder
+                    protocol.Subscribe(s.channel_name_or_uri[i]);
+
+                    // attempt to pull the channel from pubsub
+                    PubSub_Channel c = protocol.pubsub.GetChannel(s.channel_name_or_uri[i]);
+
+                    // we need to see if the channel exists
+                    if (c != null)
+                    {
+                        // subscribe the client to this channel
+                        if (subscriptions == null)
+                            subscriptions = new List<PubSub_Channel>();
+
+                        subscriptions.Add(c);
+
+                        // subscribe the client and pass true to allow publishing
+                        protocol.SocketSend(new acknowledge(c, true).ToString());
+                    }
+                    else
+                        // channel does not exist, send deny not found
+                        protocol.SocketSend(new deny(s.channel_name_or_uri[i], new PubSub_Exception(404, "Not Found", "http://example.com/api/error#404")).ToString());
+                }
+            }
+            else
+            {
+                // pubsub not enabled or not wired up correctly, send deny messages
+                for (int i = 0; i < s.channel_name_or_uri.Length; i++)
+
+                    // we need to send a deny down each channel, we gurantee a response
+                    protocol.SocketSend(new deny(s.channel_name_or_uri[i], new PubSub_Exception(403, "Forbidden", "http://example.com/api/error#403")).ToString());
             }
         }
 
