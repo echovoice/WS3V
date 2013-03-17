@@ -86,6 +86,23 @@ namespace Chat_Room_Sample
                         {
                             // inside here based on the channel name and filter a subscription
                             // could be created and added to the pubsub object
+
+                            // in this demo we will use this to increment the chat room count
+
+                            PubSub_Channel c = pubsub.GetChannel(channel_name_or_uri);
+                            
+                            // make sure it isnt null
+                            if (c != null)
+                            {
+                                // extract the room based on the channel meta data
+                                Room r = new Room(c.channel_meta);
+
+                                // increment the particpants
+                                r.participants++;
+
+                                // set the channel meta again
+                                c.channel_meta = r.ToString();
+                            }
                         };
 
                     }));
@@ -99,7 +116,32 @@ namespace Chat_Room_Sample
                     // on close callback means we need to pull the client from the
                     // concurrent dictionary and call the dispose method on it
                     WS3V_Client c; WS3V_Clients.TryRemove(socket.ConnectionInfo.Id, out c);
-                    if (c != null) c.Dispose();
+                    if (c != null)
+                    {
+                        // we need to decrement the room particapant counts
+                        // and lets send good bye messages to subscribed chat rooms
+
+                        // make sure client was subscribed in the first place
+                        if (c.subscriptions != null && c.subscriptions.Count > 0)
+                        {
+                            for (int i = 0; i < c.subscriptions.Count; i++)
+                            {
+                                // extract the room based on the channel meta data
+                                Room r = new Room(c.subscriptions[i].channel_meta);
+
+                                // increment the particpants
+                                r.participants--;
+
+                                // set the channel meta again
+                                c.subscriptions[i].channel_meta = r.ToString();
+
+                                // send good bye message
+                                c.publish_channel(c.subscriptions[i].channel_name_or_uri, "{\"type\":3,\"message\":\"\",\"client\":\"" + c.clientID + "\"}", false);
+                            }
+                        }
+
+                        c.Dispose();
+                    }
                 };
 
                 socket.OnMessage = message =>

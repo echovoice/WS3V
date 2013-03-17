@@ -20,6 +20,13 @@ namespace WS3V.MessageTypes
         public string message { get; set; }
         public bool echo { get; set; }
 
+        public publish()
+        {
+            echo = false;
+            channel_name_or_uri = null;
+            message = null;
+        }
+
         public publish(string[] message)
         {
             bool _echo = false;

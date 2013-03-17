@@ -6,6 +6,8 @@
 <body>
 	<p>PubSub over WebSockets using the WS3V Protocol</p>
 	<p>Simple Chat Room Demo</p>
+    <p>Once you join a chat room, <a target="_blank" href="">click here</a> to open another tab to simulate a second person and so on</p>
+    <p>&nbsp;</p>
     <div id="rooms" style="width:100%; clear:both">
 	loading rooms...
     </div>
@@ -50,6 +52,7 @@
 			{
 				message: 
 				{
+					type: 1,
 					message: document.getElementById(id + '_message').value,
 					client: PubSub.session_id
 				},
@@ -80,6 +83,29 @@
 				function(data)
 				{
 					document.getElementById(id + '_controls').innerHTML = "<input required id=\"" + id + "_message\" size=\"32\" placeholder=\"message\"/><input id=\"add\" onclick=\"send('" + id + "','" + uri + "')\" type=\"button\" value=\"Send\"><input id=\"add\" onclick=\"leave('" + id + "','"+uri+"')\" type=\"button\" value=\"Leave Room\">";
+				
+					// if there are old chat messages, lets reload some of them using the prepopulate command
+					if(data[3] > 0)
+					{
+						// run prepopulate, only grabbing at most 10 entries
+						PubSub.Prepopulate({
+							uri: uri,
+							count: (data[3] > 10) ? 10 : data[3]
+						});
+					}
+					
+					// announce client joined chat room
+					PubSub.Publish(
+					{
+						message: 
+						{
+							type: 2,
+							message: '',
+							client: PubSub.session_id
+						},
+						uri: uri,
+						echo: true
+					});
 				}
 			],
 			
@@ -88,7 +114,32 @@
 			[
 				function(data)
 				{
-					document.getElementById(id + '_messages').innerHTML = "<br /><strong>"+((data.message.client == PubSub.session_id) ? "me" : data.message.client)+":</strong> "+data.message.message + document.getElementById(id + '_messages').innerHTML;
+					// look for a join or leave message
+					if(data.message.type > 1)
+					{
+						var count  = document.getElementById(id + '_count').getAttribute("data-count");
+						if(data.message.type == 2)
+						{
+							// join
+							document.getElementById(id + '_messages').innerHTML = "<br /><strong>"+((data.message.client == PubSub.session_id) ? "you" : data.message.client.substring(0, 5))+" joined the room</strong> " + document.getElementById(id + '_messages').innerHTML;
+							count++;
+						}
+						else if(data.message.type == 3)
+						{
+							// left
+							document.getElementById(id + '_messages').innerHTML = "<br /><strong>"+((data.message.client == PubSub.session_id) ? "you" : data.message.client.substring(0, 5))+" left the room</strong> " + document.getElementById(id + '_messages').innerHTML;
+							count--;
+						}
+						document.getElementById(id + '_count').setAttribute("data-count", count);
+						document.getElementById(id + '_count').innerHTML = (count == 1) ? "(1 participant)" : "(" + count + " participants)";
+					}
+					else
+					
+						// normal message
+						document.getElementById(id + '_messages').innerHTML = "<br /><strong>"+((data.message.client == PubSub.session_id) ? "me" : data.message.client.substring(0, 5))+":</strong> "+data.message.message + document.getElementById(id + '_messages').innerHTML;
+					
+					// look for a join or leave message
+					//('+meta[i][2]+' people)
 				}
 			],
 			
@@ -108,10 +159,12 @@
 	
 	function createRooms(channels, meta)
 	{
+		// used to build the initial display of the chat rooms
 		var html = '';
 		
+		// itterate over the channels and build out the rooms display
 		for (var i=0; i < channels.length; i++)
-			html = html + '<div style="width:33%; float:left;"><div><i>'+channels[i]+'</i></div><div><strong>'+meta[i][0]+'</strong></div><div>'+meta[i][1]+'</div><div id="R'+i+'_messages"></div><div id="R'+i+'_controls"><input id="join" onclick="joinroom(\'R'+i+'\',\''+channels[i]+'\')" type="button" value="Join Room"></div></div>';
+			html = html + '<div style="width:33%; float:left;"><div><i>'+channels[i]+'</i></div><div><strong>'+meta[i][0]+'</strong> <strong id="R'+i+'_count" data-count="0">('+meta[i][2]+' participant'+((meta[i][2] == 1) ? '' : 's')+')</strong></div><div>'+meta[i][1]+'</div><div id="R'+i+'_messages"></div><div id="R'+i+'_controls"><input id="join" onclick="joinroom(\'R'+i+'\',\''+channels[i]+'\')" type="button" value="Join Room"></div></div>';
         
 		document.getElementById('rooms').innerHTML = html;
 	}
@@ -124,7 +177,7 @@
 			Server: "127.0.0.1",
 			Port: 8181,
 			Action: "RPCAPI",
-			DebugMode: true
+			//DebugMode: true
 		});
 		
 		

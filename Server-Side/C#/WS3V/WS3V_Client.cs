@@ -19,6 +19,14 @@ namespace WS3V
         private bool isterminated = false;
         private WS3V_Protocol protocol;
 
+        public string clientID
+        {
+            get
+            {
+                return protocol.clientID;
+            }
+        }
+
         public WS3V_Client(WS3V_Protocol protocol)
         {
             // connect protocol to client class
@@ -129,6 +137,11 @@ namespace WS3V
                         subscribe_channel(message);
                         return;
 
+                    // channel prepopulate command
+                    case 12:
+                        prepopulate_channel(message);
+                        return;
+
                     // channel publish command
                     case 15:
                         publish_channel(message);
@@ -150,12 +163,58 @@ namespace WS3V
             }
         }
 
+        // pull old messages from channel and send to the client
+        public void prepopulate_channel(string[] message)
+        {
+            // build prepopulate object
+            prepopulate p = new prepopulate(message);
+
+            if (protocol.pubsub != null)
+            {
+                // attempt to pull the channel from pubsub
+                PubSub_Channel c = protocol.pubsub.GetChannel(p.channel_name_or_uri);
+
+                // make sure channel exists and has historical data
+                if (c != null && c.historical)
+                {
+                    // build events list based on count
+                    List<PubSub_Event> events = c.GetEvents(p.count);
+
+                    // itterate over events and send to client
+                    for (int i = 0; i < events.Count; i++)
+
+                        // send the events to the client
+                        protocol.SocketSend(new _event(p.channel_name_or_uri, events[i]).ToString());
+                }
+            }
+        }
+
         // publish a message to a channel
         public void publish_channel(string[] message)
         {
             // extract publish information
             publish p = new publish(message);
 
+            // process
+            publish_channel(p);
+        }
+
+        // publish a message to a channel
+        public void publish_channel(string channel_name_or_uri, string message, bool echo)
+        {
+            // build publish object
+            publish p = new publish();
+            p.channel_name_or_uri = channel_name_or_uri;
+            p.message = message;
+            p.echo = echo;
+
+            // process
+            publish_channel(p);
+        }
+        
+        // publish a message to a channel
+        public void publish_channel(publish p)
+        {
             if (protocol.pubsub != null)
             {
                 // attempt to pull the channel from pubsub

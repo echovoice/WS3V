@@ -83,6 +83,15 @@ namespace WS3V.Support
             this.channel_meta = channel_meta.ToString();
         }
 
+        public List<PubSub_Event> GetEvents(int count)
+        {
+            if (count == 0 || count > events.Count)
+                return events;
+
+            else
+                return events.OrderBy(e => e.timestamp).Take(count).ToList();
+        }
+
         public void Empty()
         {
             events.Clear();

@@ -173,6 +173,25 @@ window.onload = start;*/
 		this.timestamp = data[3] || 0;
 		this.timestamp = new Date((this.timestamp + 1308823200)*1000);
 	}
+	
+	function WS3VWebSocket_prepopulate(props)
+	{
+		// http://ws3v.org/spec.json#prepopulate
+		this.type = 12;
+		
+		props = props || {};
+		this.uri = props.uri || '';
+		this.count = props.count || 0;
+		this.timestamp = props.timestamp || null;
+	}
+	
+	WS3VWebSocket_prepopulate.prototype.ToString = function()
+	{		
+		if(this.timestamp == null || typeof this.timestamp == 'undefined' || this.timestamp == '')
+			return [this.type, this.uri, this.count];
+		else
+			return [this.type, this.uri, this.count, this.timestamp];
+	};
 
   WS3VWebSocket.prototype =
   {
@@ -298,6 +317,19 @@ window.onload = start;*/
 		var message = new WS3VWebSocket_publish(props);
 					
 		// send the publish command to the server
+		this._Send(message.ToString());
+	},
+	
+	Prepopulate: function(props)
+	{
+		// make sure websocket is still open
+		if(this.closed)
+			return;
+
+		// create the prepopulate message object
+		var message = new WS3VWebSocket_prepopulate(props);
+					
+		// send the prepopulate command to the server
 		this._Send(message.ToString());
 	},
 	
