@@ -8,9 +8,7 @@
 	<p>Simple Chat Room Demo</p>
     <p>Once you join a chat room, <a target="_blank" href="">click here</a> to open another tab to simulate a second person and so on</p>
     <p>&nbsp;</p>
-    <div id="rooms" style="width:100%; clear:both">
-	loading rooms...
-    </div>
+    <div id="rooms" style="width:100%; clear:both">loading rooms...</div>
 	<script src="../../WS3V/websocket.js"></script>
     
     <!-- Debug Mode Requires the Following Styles and Scripts -->
@@ -30,6 +28,7 @@
 				// if the request works
 				callback: function(channels, meta)
 				{
+					// call create rooms to parse the return data and build the html
 					createRooms(channels, meta);
 				}
 			});
@@ -38,8 +37,16 @@
 	
 	function leave(id, uri)
 	{
-		document.getElementById(id + '_messages').innerHTML = "";
-		document.getElementById(id + '_controls').innerHTML = "<input id=\"join\" onclick=\"joinroom('" + id + "','"+uri+"')\" type=\"button\" value=\"Join Room\">";
+		// make sure websocket is open
+		if(PubSub.SocketState == WS3VWebSocket.prototype.SocketStates.Open)
+		{
+			// unsubscribe from channel by uri
+			PubSub.Unsubscribe(uri);
+			
+			// modify the html dom
+			document.getElementById(id + '_messages').innerHTML = "";
+			document.getElementById(id + '_controls').innerHTML = "<input id=\"join\" onclick=\"joinroom('" + id + "','"+uri+"')\" type=\"button\" value=\"Join Room\">";
+		}
 	};
 	
 	function send(id, uri)
@@ -50,6 +57,7 @@
 			// publish the message to the specified channel
 			PubSub.Publish(
 			{
+				// in this case message is an object so we can send additional information
 				message: 
 				{
 					type: 1,
@@ -95,6 +103,7 @@
 					}
 					
 					// announce client joined chat room
+					// publish event with type 2
 					PubSub.Publish(
 					{
 						message: 
@@ -147,6 +156,7 @@
 			// this is the callback that will fire
 			deny:
 			[
+				// for now we just echo the errors to the console
 				function(error, description, url)
 				{
 					console.log(error);
@@ -176,14 +186,16 @@
 		({ 
 			Server: "127.0.0.1",
 			Port: 8181,
-			Action: "RPCAPI",
-			//DebugMode: true
+			Action: "PubSubAPI",
+			DebugMode: true
 		});
 		
 		
 		
 		PubSub.Connected = function()
 		{
+			// websocket connected, get channel listings
+			// in this demo a channel listiong represents a chat room
 			getListing();
 			console.log("connected");
 		};

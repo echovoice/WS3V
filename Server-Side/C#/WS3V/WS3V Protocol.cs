@@ -20,6 +20,7 @@ namespace WS3V
 
         public Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
         public Action<string> Subscribe { get; set; }
+        public Action<string> Unsubscribe { get; set; }
         public Action<string> Pub { get; set; }
         public Action<string> Sub { get; set; }
         public Action<string> SocketSend { get; set; }
@@ -51,6 +52,7 @@ namespace WS3V
 
             RPC = x => { return new RPC_Outgoing(); };
             Subscribe = x => { };
+            Unsubscribe = x => { };
             Pub = x => { };
             Sub = x => { };
             SocketSend = x => { };

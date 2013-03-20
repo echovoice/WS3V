@@ -1,47 +1,12 @@
-/*var start = function ()
-{
-	var inc = document.getElementById('incomming');
-	var wsImpl = window.WebSocket || window.MozWebSocket;
-	var form = document.getElementById('sendForm');
-	var input = document.getElementById('sendText');
-	
-	inc.innerHTML += "connecting to server ..<br/>";
-
-	// create a new websocket and connect
-	window.ws = new wsImpl('ws://localhost:8181/consoleappsample', 'my-protocol');
-
-	// when data is comming from the server, this metod is called
-	ws.onmessage = function (evt) {
-		inc.innerHTML += evt.data + '<br/>';
-	};
-
-	// when the connection is established, this method is called
-	ws.onopen = function () {
-		inc.innerHTML += '.. connection open<br/>';
-	};
-
-	// when the connection is closed, this method is called
-	ws.onclose = function () {
-		inc.innerHTML += '.. connection closed<br/>';
-	}
-	
-	form.addEventListener('submit', function(e){
-		e.preventDefault();
-		var val = input.value;
-		ws.send(val);
-		input.value = "";
-	});
-	
-}
-
-window.onload = start;*/
-
 (function()
 {
 	WS3Vglobal =
 	{
 
 	};
+	
+	// WS3V WebSocket class constructor
+	// ws3v.org
 	
 	function WS3VWebSocket(options)
 	{
@@ -50,10 +15,16 @@ window.onload = start;*/
 
 		else
 		{
-			if (!options)
-				options = {};
+			options = options || {};
+			options.Port = options.Port || 80;
+			options.Server = options.Server || '';
+			options.Action = options.Action || '';
+			options.Credentials = options.Credentials || [];
+			options.Connected = options.Connected || function(){};
+			options.Disconnected = options.Disconnected || function(){};
+			options.DebugMode = options.DebugMode || false;
 	
-			this.settings = MergeDefaults(this._defaultOptions, options);
+			this.settings = options;
 	
 			if (!window.WebSocket)
 				throw 'UNSUPPORTED: Websockets are not supported in this browser!';
@@ -64,6 +35,20 @@ window.onload = start;*/
 			this.Disconnected = this.settings.Disconnected;
 		}
 	}
+
+
+	function WS3VWebSocket_signature(credentials)
+	{
+		// http://ws3v.org/spec.json#signature
+		this.type = 2;
+		
+		this.credentials = credentials || [];
+	}
+	
+	WS3VWebSocket_signature.prototype.ToString = function()
+	{
+		return [this.type, this.credentials];
+	};
 
 	function WS3VWebSocket_send(props)
 	{
@@ -135,6 +120,9 @@ window.onload = start;*/
 	
 	function WS3VWebSocket_subscription(props)
 	{
+		// flag used to determine if the server has acknowleged the subscription
+		this.subscribed = false;
+		
 		props = props || {};
 		this.uri = (props.uri == null || typeof props.uri == 'undefined' || props.uri == '') ? '' : props.uri;
 		this.filter = (props.filter == null || typeof props.filter == 'undefined' || props.filter == '') ? '' : props.filter;
@@ -146,7 +134,6 @@ window.onload = start;*/
 	function WS3VWebSocket_subscribe(props)
 	{
 		// http://ws3v.org/spec.json#subscribe
-		this.type = 10;
 		
 		props = props || {};
 		this.uri = props.uri || [];
@@ -159,9 +146,20 @@ window.onload = start;*/
 	WS3VWebSocket_subscribe.prototype.ToString = function()
 	{		
 		if(this.filter == null || typeof this.filter == 'undefined' || this.filter.length <= 0)
-			return [this.type, this.uri];
+			return [10, this.uri];
 		else
-			return [this.type, this.uri, this.filter];
+			return [10, this.uri, this.filter];
+	};
+	
+	function WS3VWebSocket_unsubscribe(uri)
+	{
+		// http://ws3v.org/spec.json#unsubscribe
+		this.uri = uri || '';
+	}
+	
+	WS3VWebSocket_unsubscribe.prototype.ToString = function()
+	{
+		return [14, this.uri];
 	};
 	
 	function WS3VWebSocket_event(data)
@@ -171,13 +169,14 @@ window.onload = start;*/
 		data = data || {};
 		this.message = data[2] || '';
 		this.timestamp = data[3] || 0;
+		
+		// 3v epoch convert to js date object
 		this.timestamp = new Date((this.timestamp + 1308823200)*1000);
 	}
 	
 	function WS3VWebSocket_prepopulate(props)
 	{
 		// http://ws3v.org/spec.json#prepopulate
-		this.type = 12;
 		
 		props = props || {};
 		this.uri = props.uri || '';
@@ -188,49 +187,37 @@ window.onload = start;*/
 	WS3VWebSocket_prepopulate.prototype.ToString = function()
 	{		
 		if(this.timestamp == null || typeof this.timestamp == 'undefined' || this.timestamp == '')
-			return [this.type, this.uri, this.count];
+			return [12, this.uri, this.count];
 		else
-			return [this.type, this.uri, this.count, this.timestamp];
+			return [12, this.uri, this.count, this.timestamp];
 	};
 
-  WS3VWebSocket.prototype =
-  {
-	  protocol_version: 1,
-    _socket: {},
-    latency: -1,
-    settings: {},
-
-    SocketStates:
+	// Define the WS3V WebSocket object and methods
+	WS3VWebSocket.prototype =
 	{
-      Connecting: 0,
-      Open: 1,
-      Closing: 2,
-      Closed: 3
-    },
-
-    SocketState: 3,
-	
-	authenticated: false,
-	channels: false,
-	channel_callback: function() { },
-	
-	session_id: '',
-	
-	message_index: 0,
-	closed: false,
-	
-	message_queue: [],
-	subscriptions: [],
-	
-	heart:
-	{
-		beat:-1,
-		busy:false,
-		lub:null,
-		pacemaker:null
-	},
-
-    Connect: function()
+		protocol_version: 1,
+		_socket: {},
+		latency: -1,
+		settings: {},
+		
+		SocketStates : { Connecting: 0, Open: 1, Closing: 2, Closed: 3 },
+		SocketState: 3,
+		
+		authenticated: false,
+		channels: false,
+		channel_callback: function(){},
+		
+		session_id: '',
+		
+		message_index: 0,
+		closed: false,
+		
+		message_queue: [],
+		subscriptions: [],
+		
+		heart: { beat: -1, busy: false, lub: null, pacemaker: null },
+		
+		Connect: function()
 	{
       var server = 'ws://' + this.settings.Server + ':' + this.settings.Port + '/' + this.settings.Action;
       var that = this;
@@ -297,10 +284,31 @@ window.onload = start;*/
 		// subscribe is unique as it takes an array of subscriptions
 		for (var i = 0, len = message.uri.length; i < len; i++)
 			// this builds the unique subscription object for callback tracking
+			// TODO, check if already subscribed and skip
 			this.subscriptions.push(new WS3VWebSocket_subscription({uri:message.uri[i],filter:message.filter[i],connected:message.connected[i],events:message.events[i],deny:message.deny[i]}));
 			
 		// send the subscribe command to the server
 		this._Send(message.ToString());
+	},
+	
+	Unsubscribe: function(uri)
+	{
+		// make sure websocket is still open
+		if(this.closed)
+			return;
+
+		// attempt to remove the subscrption
+		var subscription = GetSubscription(this.subscriptions, uri, true);
+		
+		// check for subscription in subscriptions and make sure we are subscribed
+		if(subscription != null && subscription[0].subscribed)
+		{
+			// create the unsubscribe message object
+			var message = new WS3VWebSocket_unsubscribe(uri);
+			
+			// send the unsubscribe command to the server
+			this._Send(message.ToString());
+		}
 	},
 	
 	Publish: function(props)
@@ -308,11 +316,8 @@ window.onload = start;*/
 		// make sure websocket is still open
 		if(this.closed)
 			return;
-			
-		// todo, check if subscribed to channel, if not issue subscription command
-		// and in connected callback fire the publish message
-		// the problem would be where to hook event callback so this might not work
 
+		// TODO check if subscribed first
 		// create the publish message object
 		var message = new WS3VWebSocket_publish(props);
 					
@@ -326,6 +331,7 @@ window.onload = start;*/
 		if(this.closed)
 			return;
 
+		// TODO check if subscribed first
 		// create the prepopulate message object
 		var message = new WS3VWebSocket_prepopulate(props);
 					
@@ -335,12 +341,22 @@ window.onload = start;*/
 	
 	Send: function(props)
 	{
+		// make sure websocket is still open
 		if(this.closed)
 			return;
-			
+		
+		// set the message id, trick to keep data transfer small
+		// use an int and just increment, session recovery should work 
+		// as long as this is never reset	
 		props.id = ++this.message_index;
+		
+		// create the send message object
 		var message = new WS3VWebSocket_send(props);
+		
+		// add message to the queue
 		this.message_queue.push(message);
+		
+		// send the command to the server
 		this._Send(message.ToString());
 	},
 
@@ -355,9 +371,11 @@ window.onload = start;*/
 	
 		this._socket.send(data);
 	
+		// if the server requests heartbeats on an empty connection only
 		// we need to check and remove the heartbeat timeouts
 		if(this.heart.beat != -1 && !this.heart.busy)
 		{
+			// clear the heartbeat and rebuild the pacemaker
 			clearTimeout(this.heart.pacemaker);
 	
 			var that = this;
@@ -447,9 +465,8 @@ window.onload = start;*/
 			if(data[0] == 1)
 			{
 				// generate signature and send
-				var response = WS3VWebSocket.prototype.signature;
-				response.credentials = this.settings.Credentials;
-				this._Send(response.ToString());
+				var message = new WS3VWebSocket_signature(this.settings.Credentials);
+				this._Send(message.ToString());
 			}
 			
 			// this message is a howdy, meaning the server is ok talking to us
@@ -570,6 +587,9 @@ window.onload = start;*/
 				// make sure its not null
 				if(typeof subscription != "undefined")
 				{
+					// mark subscribed flag as true
+					subscription.subscribed = true;
+					
 					if (subscription.connected instanceof Function)
 						subscription.connected(data);
 				}
@@ -603,6 +623,12 @@ window.onload = start;*/
 		// set close flag
 		this.closed = true;
 		
+		// unsubscribe from all subscriptions
+		for (var i = 0, len = this.subscriptions; i < len; i++)
+		
+			// unsubscribe from each
+			this.Unsubscribe(this.subscriptions[i].uri);
+		
 		if (this.settings.DebugMode)
 			this.Debug('Connection closed.', 'client');
 
@@ -629,50 +655,8 @@ window.onload = start;*/
 			document.getElementById(location).innerHTML = "<pre><code>" + message + "</code></pre>" + document.getElementById(location).innerHTML;
 	}
   };
-
-	// default options for the WS3V Websocket
-	WS3VWebSocket.prototype._defaultOptions =
-	{
-		Port: 80,
-		Server: '',
-		Action: '',
-		
-		Credentials: [],
-		
-		Connected: function() { },
-		Disconnected: function() { },
-		
-		DebugMode: false
-	};
   
-	WS3VWebSocket.prototype.signature =
-	{
-		type: 2,
-		credentials: [],
 	
-		ToString: function()
-		{
-			return [this.type, this.credentials];	
-		}
-	};
-
-	// used to itterate over the supplied instance and set defaults
-	// basically a poormans constructor with a default object
-	function MergeDefaults(o1, o2)
-	{
-		var o3 = {};
-		var p = {};
-	
-		// load defaults
-		for (p in o1)
-			o3[p] = o1[p];
-	
-		// overwrite with provided settings
-		for (p in o2)
-			o3[p] = o2[p];
-	
-		return o3;
-	}
   
 	// little trick to remove a queued message by id and return the message for processing
 	// used to simulate guranteed response in an async enviornment
@@ -701,11 +685,20 @@ window.onload = start;*/
     	}
     	return null;
 	}
+	
+	// check if client is subscribed to the channel
+  	function IsSubscribed(array, uri)
+	{
+		var subscription = GetSubscription(array, uri, false);
+		
+		if(subscription != null)
+			return true;
+			
+		return false;
+	}
 
 	// attach these objects to the window
 	window.WS3VWebSocket = WS3VWebSocket;
-	window.MergeDefaults = MergeDefaults;
-	window.RetrieveMessage = RetrieveMessage;
 	
 	// oh firefox, way to pull an ie.. no wonder people don't like you anymore
 	if(window.MozWebSocket)

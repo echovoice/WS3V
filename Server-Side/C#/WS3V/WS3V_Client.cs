@@ -142,6 +142,11 @@ namespace WS3V
                         prepopulate_channel(message);
                         return;
 
+                    // channel unsubscribe command
+                    case 14:
+                        unsubscribe_channel(message);
+                        return;
+
                     // channel publish command
                     case 15:
                         publish_channel(message);
@@ -254,7 +259,25 @@ namespace WS3V
             }
         }
 
-        // subscribes a client to a channel
+        // unsubscribes a client to a channel
+        public void unsubscribe_channel(string[] message)
+        {
+            // extract subscription(s) requested
+            unsubscribe u = new unsubscribe(message);
+
+            // pubsub enabled
+            if (protocol.pubsub != null)
+            {
+                // call the dynamic unsubscription builder
+                protocol.Unsubscribe(u.channel_name_or_uri);
+
+                // unsubscribe the client to this channel
+                if (subscriptions != null)
+                    subscriptions.RemoveAll(s => s.channel_name_or_uri == u.channel_name_or_uri);
+            }
+        }
+        
+        // subscribes a client to a channel(s)
         public void subscribe_channel(string[] message)
         {
             // extract subscription(s) requested

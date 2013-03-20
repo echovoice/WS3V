@@ -14,6 +14,7 @@ namespace WS3V.Interfaces
 
         Func<RPC_Incoming, RPC_Outgoing> RPC { get; set; }
         Action<string> Subscribe { get; set; }
+        Action<string> Unsubscribe { get; set; }
         Action<string> Pub { get; set; }
         Action<string> Sub { get; set; }
         Action<string> SocketSend { get; set; }

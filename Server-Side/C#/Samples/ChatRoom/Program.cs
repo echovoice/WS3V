@@ -80,8 +80,7 @@ namespace Chat_Room_Sample
                         // we need to pass in the cocurrent dictionary for PubSub to work
                         ws3v_protocol.WS3V_Clients = WS3V_Clients;
 
-                        // this demo wont use this, but this is how to pass dynamic channels into
-                        // the server, channels created based on the subscription request
+                        // use this to capture a subscribe request
                         ws3v_protocol.Subscribe = channel_name_or_uri =>
                         {
                             // inside here based on the channel name and filter a subscription
@@ -99,6 +98,27 @@ namespace Chat_Room_Sample
 
                                 // increment the particpants
                                 r.participants++;
+
+                                // set the channel meta again
+                                c.channel_meta = r.ToString();
+                            }
+                        };
+
+                        // use this to capture an unsubscribe request
+                        ws3v_protocol.Unsubscribe = channel_name_or_uri =>
+                        {
+                            // in this demo we will use this to decrement the chat room count
+
+                            PubSub_Channel c = pubsub.GetChannel(channel_name_or_uri);
+
+                            // make sure it isnt null
+                            if (c != null)
+                            {
+                                // extract the room based on the channel meta data
+                                Room r = new Room(c.channel_meta);
+
+                                // deccrement the particpants
+                                r.participants--;
 
                                 // set the channel meta again
                                 c.channel_meta = r.ToString();
@@ -140,6 +160,7 @@ namespace Chat_Room_Sample
                             }
                         }
 
+                        // now dump the client resources
                         c.Dispose();
                     }
                 };
