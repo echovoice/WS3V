@@ -12,10 +12,13 @@ using WS3V.Support;
 
 namespace RESTful_Sample
 {
-    public class Websocket
+    public class Websocket : IDisposable
     {
         // used to maintain a list of clients
-        ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients = new ConcurrentDictionary<Guid, WS3V_Client>();
+        public ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients = new ConcurrentDictionary<Guid, WS3V_Client>();
+
+        // websocket server
+        public WebSocketServer server;
 
         // start the websocket demo
         public void start(string connect)
@@ -23,7 +26,7 @@ namespace RESTful_Sample
             // create the fleck websocket server
             // see https://github.com/statianzo/Fleck for more information
             FleckLog.Level = LogLevel.Debug;
-            WebSocketServer server = new WebSocketServer(connect);
+            server = new WebSocketServer(connect);
 
             // now we take the websocket server hooks and connect our demo processing code to them
             server.Start(socket =>
@@ -126,6 +129,12 @@ namespace RESTful_Sample
                     if (c != null) c.Process(message);
                 };
             });
+        }
+
+        public void Dispose()
+        {
+            WS3V_Clients.Clear();
+            server.Dispose();
         }
     }
 }

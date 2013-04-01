@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "Azure Cloud Demos", "Azure Cloud Demos\Azure Cloud Demos.ccproj", "{404EE9B3-8F96-49BB-9D1C-C0CC9B229000}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{B69C0AFC-1AB5-4A7C-8236-D0F6848E53EE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat Room Sample", "..\Server-Side\C#\Samples\ChatRoom\Chat Room Sample.csproj", "{290BFDA7-93DB-4C1F-9889-8EF74352C965}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RESTful Sample", "..\Server-Side\C#\Samples\RESTful Sample\RESTful Sample.csproj", "{EB2524CC-3188-489C-AF77-40E330B2D4DB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fleck", "..\Server-Side\C#\Submodules\Fleck\src\Fleck\Fleck.csproj", "{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS3V", "..\Server-Side\C#\WS3V\WS3V.csproj", "{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{404EE9B3-8F96-49BB-9D1C-C0CC9B229000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{404EE9B3-8F96-49BB-9D1C-C0CC9B229000}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{404EE9B3-8F96-49BB-9D1C-C0CC9B229000}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{404EE9B3-8F96-49BB-9D1C-C0CC9B229000}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B69C0AFC-1AB5-4A7C-8236-D0F6848E53EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B69C0AFC-1AB5-4A7C-8236-D0F6848E53EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B69C0AFC-1AB5-4A7C-8236-D0F6848E53EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B69C0AFC-1AB5-4A7C-8236-D0F6848E53EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

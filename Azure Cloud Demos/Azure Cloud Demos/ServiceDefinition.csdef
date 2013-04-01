@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ServiceDefinition name="Azure_Cloud_Demos" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2012-10.1.8">
+  <WebRole name="Demo" vmsize="ExtraSmall">
+    <Sites>
+      <Site name="Web">
+        <Bindings>
+          <Binding name="Endpoint1" endpointName="Web" />
+        </Bindings>
+      </Site>
+    </Sites>
+    <Endpoints>
+      <InputEndpoint name="Web" protocol="http" port="80" />
+      <InputEndpoint name="Endpoint1" protocol="tcp" port="8181" />
+      <InputEndpoint name="Endpoint2" protocol="tcp" port="8182" />
+    </Endpoints>
+    <Imports>
+    </Imports>
+  </WebRole>
+</ServiceDefinition>

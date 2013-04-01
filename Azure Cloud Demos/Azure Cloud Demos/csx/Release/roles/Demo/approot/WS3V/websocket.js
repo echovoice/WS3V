@@ -233,140 +233,18 @@
 			{
 				// console
 				var debugconsole = document.createElement('div');
-				debugconsole.setAttribute("id", "ws3vdebugconsole");
-				debugconsole.setAttribute("data-dragging", 0);
+				debugconsole.setAttribute("id", "debugconsole");
 				document.getElementsByTagName('body')[0].appendChild(debugconsole);
-				
-				// resize bar
-				var debugresize = document.createElement('div');
-				debugresize.setAttribute("id", "ws3vdebugresizebar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugresize);
-				
-				// top bar
-				var debugtop = document.createElement('div');
-				debugtop.setAttribute("id", "ws3vdebugtopbar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugtop);
-				
-				// top bar ul
-				var debugul = document.createElement('ul');
-				debugul.setAttribute("id", "ws3vdebugmenu");
-				document.getElementById('ws3vdebugtopbar').appendChild(debugul);
-				
-				// top bar li receive
-				var debugreceive = document.createElement('li');
-				debugreceive.setAttribute("id", "ws3vdebugsend</i>");
-				debugreceive.innerHTML = "<i>WebSocket Receive";
-				document.getElementById('ws3vdebugmenu').appendChild(debugreceive);
-				
-				// top bar li send
-				var debugsend = document.createElement('li');
-				debugsend.setAttribute("id", "ws3vdebugsend");
-				debugsend.innerHTML = "<i>WebSocket Send</i>";
-				debugsend.className = "active";
-				document.getElementById('ws3vdebugmenu').appendChild(debugsend);
-				
-				// top bar li close
-				var debugclose = document.createElement('li');
-				debugclose.setAttribute("id", "ws3vdebugclose");
-				document.getElementById('ws3vdebugmenu').appendChild(debugclose);
-				
-				// middle bar
-				var debugmiddle = document.createElement('div');
-				debugmiddle.setAttribute("id", "ws3vdebugmiddlebar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugmiddle);
 				
 				// client-side
 				var debugclient = document.createElement('div');
-				debugclient.setAttribute("id", "ws3vdebugclient");
-				document.getElementById('ws3vdebugmiddlebar').appendChild(debugclient);
+				debugclient.setAttribute("id", "client");
+				document.getElementById('debugconsole').appendChild(debugclient);
 				
 				// server-side
 				var debugserver = document.createElement('div');
-				debugserver.setAttribute("id", "ws3vdebugserver");
-				document.getElementById('ws3vdebugmiddlebar').appendChild(debugserver);
-				
-				// status
-				var debugstatus = document.createElement('div');
-				debugstatus.setAttribute("id", "ws3vdebugstatus");
-				document.getElementsByTagName('body')[0].appendChild(debugstatus);
-				
-				var children = document.getElementById('ws3vdebugconsole').children
- 
-        		for(var i=0; i < children.length; i++)
-				{
-            		children[i].onclick = function(e)
-					{
-						document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #646464';
-						document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #646464';
-						e.stopPropagation();
-					}
-        		}
-				
-				document.getElementsByTagName("body")[0].addEventListener("click", function(e)
-				{
-					document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-					document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-				}, false);
-				
-				window.addEventListener("blur", function(e)
-				{
-					document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-					document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-				}, false);
-				
-				document.getElementsByTagName("body")[0].addEventListener("mousemove", function(e)
-				{				
-					if(document.getElementById('ws3vdebugconsole').getAttribute("data-dragging") == 1)
-					{
-						cevent=(typeof event=='undefined'?e:event) 
-						var newHeight=parseInt(parseInt(document.getElementById('ws3vdebugconsole').getAttribute("data-curheight"))+parseInt(parseInt(document.getElementById('ws3vdebugconsole').getAttribute("data-curpos"))-cevent.clientY));
-						newHeight=(newHeight<70?70:newHeight) 
-						document.getElementById('ws3vdebugconsole').style.height=newHeight+'px' ;
-						document.getElementsByTagName("body")[0].blur();
-					}
-					
-				}, false);
-				
-				document.getElementsByTagName("body")[0].addEventListener("mouseup", function(e)
-				{
-					if(document.getElementById('ws3vdebugconsole').getAttribute("data-dragging") == 1)
-					{
-						document.getElementById('ws3vdebugconsole').setAttribute("data-dragging", 0);
-						document.getElementsByTagName("body")[0].style["-webkit-touch-callout"] = "auto";
-						document.getElementsByTagName("body")[0].style["-webkit-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-khtml-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-moz-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-ms-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["cursor"] = "auto";
-						if(document.getElementById('ws3vdebugtopbar').style.borderTop != '1px solid rgb(100, 100, 100)')
-						{
-							setTimeout(function()
-							{
-								document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-								document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-							}, 1);
-						}
-					}
-					
-				}, false);
-				
-				document.getElementById("ws3vdebugresizebar").addEventListener("mousedown", function(e)
-				{
-					document.getElementById('ws3vdebugconsole').setAttribute("data-dragging", 1);
-					cevent=(typeof event=='undefined'?e:event) 
-					document.getElementById('ws3vdebugconsole').setAttribute("data-curpos", cevent.clientY);
-					document.getElementById('ws3vdebugconsole').setAttribute("data-curheight", parseInt(document.getElementById('ws3vdebugconsole').offsetHeight));
-					document.getElementsByTagName("body")[0].style["-webkit-touch-callout"] = "none";
-					document.getElementsByTagName("body")[0].style["-webkit-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-khtml-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-moz-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-ms-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["cursor"] = "n-resize";
-				}, false);
-				
-				
+				debugserver.setAttribute("id", "server");
+				document.getElementById('debugconsole').appendChild(debugserver);
 				
 				this.Debug("connecting to " + server, 'client');
 			}
@@ -769,7 +647,7 @@
 	Debug: function(message, location)
 	{ 
 		if (this.settings.DebugMode)
-			document.getElementById("ws3vdebug" + location).innerHTML = "<pre><code>" + message + "</code></pre>" + document.getElementById("ws3vdebug" + location).innerHTML;
+			document.getElementById(location).innerHTML = "<pre><code>" + message + "</code></pre>" + document.getElementById(location).innerHTML;
 	}
   };
   

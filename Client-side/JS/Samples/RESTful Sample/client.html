@@ -123,8 +123,8 @@
 		// build the WS3V WebSocket
 		RESTfulAPI = new WS3VWebSocket
 		({ 
-			Server: "127.0.0.1",
-			Port: 8181,
+			Server: (window.location.protocol == "file:") ? "127.0.0.1" : window.location.hostname,
+			Port: 8182,
 			Action: "RESTfulAPI",
 			Credentials: [document.getElementById('api_key').value],
 			DebugMode: document.getElementById('debug').checked

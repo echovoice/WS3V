@@ -46,11 +46,6 @@
 			// modify the html dom
 			document.getElementById(id + '_messages').innerHTML = "";
 			document.getElementById(id + '_controls').innerHTML = "<input id=\"join\" onclick=\"joinroom('" + id + "','"+uri+"')\" type=\"button\" value=\"Join Room\">";
-			
-			// decrease the participant count
-			var count = document.getElementById(id + '_count').getAttribute("data-count") - 1;
-			document.getElementById(id + '_count').setAttribute("data-count", count);
-			document.getElementById(id + '_count').innerHTML = (count == 1) ? "(1 participant)" : "(" + count + " participants)";
 		}
 	};
 	

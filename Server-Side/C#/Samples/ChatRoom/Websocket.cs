@@ -11,13 +11,16 @@ using WS3V.Support;
 
 namespace Chat_Room_Sample
 {
-    public class Websocket
+    public class Websocket : IDisposable
     {
         // used to maintain a list of clients
         public ConcurrentDictionary<Guid, WS3V_Client> WS3V_Clients = new ConcurrentDictionary<Guid, WS3V_Client>();
 
         // pubsub object control
         public PubSub_Listing pubsub = new PubSub_Listing();
+
+        // websocket server
+        public WebSocketServer server;
 
         // start the websocket demo
         public void start(string connect)
@@ -46,7 +49,7 @@ namespace Chat_Room_Sample
             // create the fleck websocket server
             // see https://github.com/statianzo/Fleck for more information
             FleckLog.Level = LogLevel.Debug;
-            WebSocketServer server = new WebSocketServer(connect);
+            server = new WebSocketServer(connect);
 
             // now we take the websocket server hooks and connect our demo processing code to them
             server.Start(socket =>
@@ -110,23 +113,30 @@ namespace Chat_Room_Sample
                         ws3v_protocol.Unsubscribe = channel_name_or_uri =>
                         {
                             // in this demo we will use this to decrement the chat room count
-
-                            PubSub_Channel c = pubsub.GetChannel(channel_name_or_uri);
-
-                            // make sure it isnt null
-                            if (c != null)
+                            // and send the good bye message
+                            WS3V_Client w; WS3V_Clients.TryGetValue(socket.ConnectionInfo.Id, out w);
+                            if (w != null)
                             {
-                                // extract the room based on the channel meta data
-                                Room r = new Room(c.channel_meta);
+                                // get the pubsub channel
+                                PubSub_Channel c = pubsub.GetChannel(channel_name_or_uri);
 
-                                // deccrement the particpants
-                                r.participants--;
+                                // make sure it isnt null
+                                if (c != null)
+                                {
+                                    // extract the room based on the channel meta data
+                                    Room r = new Room(c.channel_meta);
 
-                                // set the channel meta again
-                                c.channel_meta = r.ToString();
+                                    // deccrement the particpants
+                                    r.participants--;
+
+                                    // set the channel meta again
+                                    c.channel_meta = r.ToString();
+
+                                    // send good bye message
+                                    w.publish_channel(c.channel_name_or_uri, "{\"type\":3,\"message\":\"\",\"client\":\"" + w.clientID + "\"}", false);
+                                }
                             }
                         };
-
                     }));
 
                     // add the client to the concurrent dictionary
@@ -175,6 +185,13 @@ namespace Chat_Room_Sample
                     if (c != null) c.Process(message);
                 };
             });
+        }
+
+        public void Dispose()
+        {
+            WS3V_Clients.Clear();
+            server.Dispose();
+            pubsub = null;
         }
     }
 }
