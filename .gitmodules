@@ -1,3 +1,6 @@
 [submodule "Server-Side/C#/Submodules/Fleck"]
 	path = "Server-Side/C#/Submodules/Fleck"
 	url = git://github.com/statianzo/Fleck.git
+[submodule "Client-side/JS/Submodules/vkBeautify"]
+	path = Client-side/JS/Submodules/vkBeautify
+	url = git://github.com/vkiryukhin/vkBeautify.git
