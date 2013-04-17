@@ -329,7 +329,8 @@ namespace WS3V
         {
             try
             {
-                protocol.SocketSend(new receive(message[1], protocol.RPC(new RPC_Incoming(message)).response, protocol.headers).ToString());
+                RPC_Outgoing o = protocol.RPC(new RPC_Incoming(message));
+                protocol.SocketSend(new receive(message[1], o.response, o.expires, protocol.headers).ToString());
             }
 
             // catch our own errors triggered externally

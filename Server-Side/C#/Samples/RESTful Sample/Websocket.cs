@@ -86,8 +86,8 @@ namespace RESTful_Sample
                             {
                                 if (x.method == "GET")
                                 {
-                                    // send the playlist
-                                    return new RPC_Outgoing(playlist);
+                                    // send the playlist and set the expiration header 5 min from now
+                                    return new RPC_Outgoing(playlist, DateTime.UtcNow.AddMinutes(5));
                                 }
                                 else if (x.method == "DELETE")
                                 {

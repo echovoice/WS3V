@@ -17,7 +17,7 @@
 			options.Credentials = options.Credentials || [];
 			options.Connected = options.Connected || function(){};
 			options.Disconnected = options.Disconnected || function(){};
-			options.DebugMode = options.DebugMode || false;
+			options.Retries = options.Retries || 16;
 	
 			this.settings = options;
 	
@@ -28,6 +28,7 @@
 			
 			this.Connected = this.settings.Connected;
 			this.Disconnected = this.settings.Disconnected;
+			this.retries_left = options.Retries || 16;
 		}
 	}
 
@@ -204,6 +205,9 @@
 		
 		session_id: '',
 		
+		retries_left:0,
+		reconnect:0,
+		
 		message_index: 0,
 		closed: false,
 		
@@ -219,36 +223,12 @@
       this._socket = new WebSocket(server);
       this._socket.onopen = function() { that._OnOpen(); };
       this._socket.onmessage = function(data) { that._OnMessage(data); };
-      this._socket.onclose = function() { that._OnClose(); };
+      this._socket.onclose = function(e) { that._OnClose(e); };
       this.SocketState = WS3VWebSocket.prototype.SocketStates.Connecting;
-
-		if (this.settings.DebugMode)
-		{
-			if(!window.vkbeautify)
-			{
-		  		throw "DEBUG: Can't debug without asset vkbeautify.js, debug disabled!";
-				this.settings.DebugMode = false;
-			}
-			else
-			{
-				// console
-				var debugconsole = document.createElement('div');
-				debugconsole.setAttribute("id", "debugconsole");
-				document.getElementsByTagName('body')[0].appendChild(debugconsole);
-				
-				// client-side
-				var debugclient = document.createElement('div');
-				debugclient.setAttribute("id", "client");
-				document.getElementById('debugconsole').appendChild(debugclient);
-				
-				// server-side
-				var debugserver = document.createElement('div');
-				debugserver.setAttribute("id", "server");
-				document.getElementById('debugconsole').appendChild(debugserver);
-				
-				this.Debug("connecting to " + server, 'client');
-			}
-		}
+	  
+	  	// tell debug the connection is connecting
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Connecting(server);
     },
 	
 	Channels: function(props)
@@ -370,7 +350,7 @@
 		// we need to check and remove the heartbeat timeouts
 		if(this.heart.beat != -1 && !this.heart.busy)
 		{
-			// clear the heartbeat and rebuild the pacemaker
+			// clear the heartbeat and rebuild the pacemaker timeout
 			clearTimeout(this.heart.pacemaker);
 	
 			var that = this;
@@ -380,18 +360,19 @@
 				that._Send("lub");
 			}, that.heart.beat);
 		}
-	
-		if (this.settings.DebugMode)
 		
-			this.Debug((data != 'lub') ? vkbeautify.json(data) : 'lub <3', 'client');
+		// send to debug is enabled, vkbeautify if available as well
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Log('client', (data != 'lub' && window.vkbeautify) ? vkbeautify.json(data) : data);
 	},
 
 	Stop: function()
 	{
 		this._socket.close();
 	
-		if (this.settings.DebugMode)
-		  this.Debug('Closed connection.', 'client');
+		// tell debug the connection is closed
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Closed();
 	},
 
     Connected: function() { },
@@ -402,8 +383,13 @@
       var instance = this;
       this.SocketState = WS3VWebSocket.prototype.SocketStates.Open;
 
-      if (this.settings.DebugMode)
-		  this.Debug('Connected.', 'client');
+      	// tell debug the connection is open
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Open('ws://' + this.settings.Server + ':' + this.settings.Port + '/' + this.settings.Action);
+			
+		// reset rety count
+		this.retries_left = this.settings.Retries;
+		this.reconnect = 0;
     },
 
     _OnMessage: function(event)
@@ -432,11 +418,12 @@
 					}, that.heart.beat);
 				}
 				
-				// show debug output
-				if (this.settings.DebugMode)
+				
+				// send to debug is enabled, send latency as well
+				if (window.WS3VWebSocketDebug)
 				{
-		  			this.Debug('dub <3', 'server');
-					this.Debug('[ws3v diagnostics -> connection latency: ' + this.latency + 'ms]', 'client');
+					WS3VWebSocketDebug.Log('server', 'dub');
+					WS3VWebSocketDebug.Latency(this.latency);
 				}
 			}
 			
@@ -444,8 +431,10 @@
 			return;
 		}
 
-      if (this.settings.DebugMode)
-		  this.Debug(vkbeautify.json(event.data), 'server');
+
+		// send to debug is enabled, vkbeautify if available as well
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Log('server', (window.vkbeautify) ? vkbeautify.json(event.data) : event.data);
 		
 		// extract the data and parse the JSON
 		var data = JSON.parse(event.data);
@@ -608,29 +597,20 @@
 			  
 		}
     },
+	/// clean close run this ->
+	
+				// unsubscribe from all subscriptions
+	//		for (var i = 0, len = this.subscriptions; i < len; i++)
+			
+				// unsubscribe from each
+	//			this.Unsubscribe(this.subscriptions[i].uri);
 
-	_OnClose: function()
+	_OnClose: function(e)
 	{
-		// make sure we didnt close already
-		if(this.closed)
-			return;
-		
-		// set close flag
-		this.closed = true;
-		
-		// unsubscribe from all subscriptions
-		for (var i = 0, len = this.subscriptions; i < len; i++)
-		
-			// unsubscribe from each
-			this.Unsubscribe(this.subscriptions[i].uri);
-		
-		if (this.settings.DebugMode)
-			this.Debug('Connection closed.', 'client');
-
-		// set socket state and fire disconnect callback
-		this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
-		this.Disconnected();
-	  
+		// tell debug the connection is closed
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Closed();
+			
 		// we need to check and remove the heartbeat intervals
 		if(this.heart.beat != -1)
 		{
@@ -641,14 +621,50 @@
 			else
 				clearTimeout(this.heart.pacemaker);
 		}
-    },
-	
-	// debug function, output pretty server and client logs
-	Debug: function(message, location)
-	{ 
-		if (this.settings.DebugMode)
-			document.getElementById(location).innerHTML = "<pre><code>" + message + "</code></pre>" + document.getElementById(location).innerHTML;
-	}
+		
+		this.authenticated = false;
+		this.heart = { beat: -1, busy: false, lub: null, pacemaker: null };
+				
+		// check if close was unclean
+		if(e != "undefined" && !e.wasClean && --this.retries_left > 0)
+		{
+			// calculate a random exponential backoff
+			this.reconnect = Math.floor(Math.random()*(Math.pow(2, (this.settings.Retries - this.retries_left)))+this.reconnect);
+			
+			// min of 2 seconds
+            this.reconnect = (this.reconnect < 2) ? 2 : this.reconnect;
+			
+			// max of 3 min
+			this.reconnect = (this.reconnect > 180) ? 180 : this.reconnect;
+			
+			// tell debug the connection is closed
+			if (window.WS3VWebSocketDebug)
+				WS3VWebSocketDebug.Timeout(this.reconnect);
+			
+			var that = this;
+
+			// set the time before connect
+			setTimeout(function() { that.Connect(); }, that.reconnect * 1000);
+			
+			// leave method
+			return;
+		}
+		
+		// given up on retry or it was set for none
+		else
+		{
+			// make sure we didnt close already
+			if(this.closed)
+				return;
+			
+			// set close flag
+			this.closed = true;
+			
+			// set socket state and fire disconnect callback
+			this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
+			this.Disconnected();
+		}
+    }
   };
   
 	
@@ -695,7 +711,7 @@
 	// attach these objects to the window
 	window.WS3VWebSocket = WS3VWebSocket;
 	
-	// oh firefox, way to pull an ie.. no wonder people don't like you anymore
+	// oh firefox....
 	if(window.MozWebSocket)
 		window.WebSocket = MozWebSocket;
 

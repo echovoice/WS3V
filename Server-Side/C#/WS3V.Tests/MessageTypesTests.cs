@@ -127,7 +127,7 @@ namespace WS3V.Tests
             // documentation example 1
             fake_headers_short headers = new fake_headers_short();
             receive r = new receive("swezataf3as5", JSONEncoders.EncodeJsString("definitly slightly positive"), headers.ToString());
-            string expected = "[6,\"swezataf3as5\",\"definitly slightly positive\",{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
+            string expected = "[6,\"swezataf3as5\",\"definitly slightly positive\",0,{\"api_day_quota\":1000,\"api_day_reset\":41268740}]";
             string result = r.ToString();
             Assert.AreEqual(expected, result);
 

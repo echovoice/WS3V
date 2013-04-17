@@ -12,8 +12,9 @@
 	<script src="../../WS3V/websocket.js"></script>
     
     <!-- Debug Mode Requires the Following Styles and Scripts -->
-    <link rel="stylesheet" href="../../WS3V/debug-assets/css/styles.css">
-    <script src="../../WS3V/debug-assets/vkbeautify/vkbeautify.js"></script>
+    <link rel="stylesheet" href="../../WS3V/debug-assets/websocket-debug.css">
+    <script src="../../WS3V/debug-assets/websocket-debug.js"></script>
+    <script src="../../Submodules\vkBeautify/vkbeautify.js"></script>
     <!-- End Debug Required -->
     
     <script>
@@ -95,7 +96,7 @@
 			[
 				function(data)
 				{
-					document.getElementById(id + '_controls').innerHTML = "<input onkeypress=\"if(window.event.keyCode == 13){send('" + id + "','" + uri + "');}\" required id=\"" + id + "_message\" size=\"32\" placeholder=\"message\"/><input id=\"add\" onclick=\"send('" + id + "','" + uri + "')\" type=\"button\" value=\"Send\"><input id=\"add\" onclick=\"leave('" + id + "','"+uri+"')\" type=\"button\" value=\"Leave Room\">";
+					document.getElementById(id + '_controls').innerHTML = "<input onkeypress=\"if(event.keyCode == 13){send('" + id + "','" + uri + "');}\" required id=\"" + id + "_message\" size=\"32\" placeholder=\"message\"/><input id=\"add\" onclick=\"send('" + id + "','" + uri + "')\" type=\"button\" value=\"Send\"><input id=\"add\" onclick=\"leave('" + id + "','"+uri+"')\" type=\"button\" value=\"Leave Room\">";
 				
 					// if there are old chat messages, lets reload some of them using the prepopulate command
 					if(data[3] > 0)
@@ -191,8 +192,7 @@
 		({ 
 			Server: (window.location.protocol == "file:") ? "127.0.0.1" : window.location.hostname,
 			Port: 8181,
-			Action: "PubSubAPI",
-			DebugMode: true
+			Action: "PubSubAPI"
 		});
 		
 		PubSub.Connected = function()

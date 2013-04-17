@@ -17,7 +17,7 @@
 			options.Credentials = options.Credentials || [];
 			options.Connected = options.Connected || function(){};
 			options.Disconnected = options.Disconnected || function(){};
-			options.DebugMode = options.DebugMode || false;
+			options.Retries = options.Retries || 16;
 	
 			this.settings = options;
 	
@@ -28,6 +28,7 @@
 			
 			this.Connected = this.settings.Connected;
 			this.Disconnected = this.settings.Disconnected;
+			this.retries_left = options.Retries || 16;
 		}
 	}
 
@@ -204,6 +205,9 @@
 		
 		session_id: '',
 		
+		retries_left:0,
+		reconnect:0,
+		
 		message_index: 0,
 		closed: false,
 		
@@ -219,158 +223,12 @@
       this._socket = new WebSocket(server);
       this._socket.onopen = function() { that._OnOpen(); };
       this._socket.onmessage = function(data) { that._OnMessage(data); };
-      this._socket.onclose = function() { that._OnClose(); };
+      this._socket.onclose = function(e) { that._OnClose(e); };
       this.SocketState = WS3VWebSocket.prototype.SocketStates.Connecting;
-
-		if (this.settings.DebugMode)
-		{
-			if(!window.vkbeautify)
-			{
-		  		throw "DEBUG: Can't debug without asset vkbeautify.js, debug disabled!";
-				this.settings.DebugMode = false;
-			}
-			else
-			{
-				// console
-				var debugconsole = document.createElement('div');
-				debugconsole.setAttribute("id", "ws3vdebugconsole");
-				debugconsole.setAttribute("data-dragging", 0);
-				document.getElementsByTagName('body')[0].appendChild(debugconsole);
-				
-				// resize bar
-				var debugresize = document.createElement('div');
-				debugresize.setAttribute("id", "ws3vdebugresizebar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugresize);
-				
-				// top bar
-				var debugtop = document.createElement('div');
-				debugtop.setAttribute("id", "ws3vdebugtopbar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugtop);
-				
-				// top bar ul
-				var debugul = document.createElement('ul');
-				debugul.setAttribute("id", "ws3vdebugmenu");
-				document.getElementById('ws3vdebugtopbar').appendChild(debugul);
-				
-				// top bar li receive
-				var debugreceive = document.createElement('li');
-				debugreceive.setAttribute("id", "ws3vdebugsend</i>");
-				debugreceive.innerHTML = "<i>WebSocket Receive";
-				document.getElementById('ws3vdebugmenu').appendChild(debugreceive);
-				
-				// top bar li send
-				var debugsend = document.createElement('li');
-				debugsend.setAttribute("id", "ws3vdebugsend");
-				debugsend.innerHTML = "<i>WebSocket Send</i>";
-				debugsend.className = "active";
-				document.getElementById('ws3vdebugmenu').appendChild(debugsend);
-				
-				// top bar li close
-				var debugclose = document.createElement('li');
-				debugclose.setAttribute("id", "ws3vdebugclose");
-				document.getElementById('ws3vdebugmenu').appendChild(debugclose);
-				
-				// middle bar
-				var debugmiddle = document.createElement('div');
-				debugmiddle.setAttribute("id", "ws3vdebugmiddlebar");
-				document.getElementById('ws3vdebugconsole').appendChild(debugmiddle);
-				
-				// client-side
-				var debugclient = document.createElement('div');
-				debugclient.setAttribute("id", "ws3vdebugclient");
-				document.getElementById('ws3vdebugmiddlebar').appendChild(debugclient);
-				
-				// server-side
-				var debugserver = document.createElement('div');
-				debugserver.setAttribute("id", "ws3vdebugserver");
-				document.getElementById('ws3vdebugmiddlebar').appendChild(debugserver);
-				
-				// status
-				var debugstatus = document.createElement('div');
-				debugstatus.setAttribute("id", "ws3vdebugstatus");
-				document.getElementsByTagName('body')[0].appendChild(debugstatus);
-				
-				var children = document.getElementById('ws3vdebugconsole').children
- 
-        		for(var i=0; i < children.length; i++)
-				{
-            		children[i].onclick = function(e)
-					{
-						document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #646464';
-						document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #646464';
-						e.stopPropagation();
-					}
-        		}
-				
-				document.getElementsByTagName("body")[0].addEventListener("click", function(e)
-				{
-					document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-					document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-				}, false);
-				
-				window.addEventListener("blur", function(e)
-				{
-					document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-					document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-				}, false);
-				
-				document.getElementsByTagName("body")[0].addEventListener("mousemove", function(e)
-				{				
-					if(document.getElementById('ws3vdebugconsole').getAttribute("data-dragging") == 1)
-					{
-						cevent=(typeof event=='undefined'?e:event) 
-						var newHeight=parseInt(parseInt(document.getElementById('ws3vdebugconsole').getAttribute("data-curheight"))+parseInt(parseInt(document.getElementById('ws3vdebugconsole').getAttribute("data-curpos"))-cevent.clientY));
-						newHeight=(newHeight<70?70:newHeight) 
-						document.getElementById('ws3vdebugconsole').style.height=newHeight+'px' ;
-						document.getElementsByTagName("body")[0].blur();
-					}
-					
-				}, false);
-				
-				document.getElementsByTagName("body")[0].addEventListener("mouseup", function(e)
-				{
-					if(document.getElementById('ws3vdebugconsole').getAttribute("data-dragging") == 1)
-					{
-						document.getElementById('ws3vdebugconsole').setAttribute("data-dragging", 0);
-						document.getElementsByTagName("body")[0].style["-webkit-touch-callout"] = "auto";
-						document.getElementsByTagName("body")[0].style["-webkit-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-khtml-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-moz-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-ms-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["-user-select"] = "auto";
-						document.getElementsByTagName("body")[0].style["cursor"] = "auto";
-						if(document.getElementById('ws3vdebugtopbar').style.borderTop != '1px solid rgb(100, 100, 100)')
-						{
-							setTimeout(function()
-							{
-								document.getElementById('ws3vdebugtopbar').style.borderTop = '1px solid #A3A3A3';
-								document.getElementById('ws3vdebugtopbar').style.borderBottom = '1px solid #A3A3A3';
-							}, 1);
-						}
-					}
-					
-				}, false);
-				
-				document.getElementById("ws3vdebugresizebar").addEventListener("mousedown", function(e)
-				{
-					document.getElementById('ws3vdebugconsole').setAttribute("data-dragging", 1);
-					cevent=(typeof event=='undefined'?e:event) 
-					document.getElementById('ws3vdebugconsole').setAttribute("data-curpos", cevent.clientY);
-					document.getElementById('ws3vdebugconsole').setAttribute("data-curheight", parseInt(document.getElementById('ws3vdebugconsole').offsetHeight));
-					document.getElementsByTagName("body")[0].style["-webkit-touch-callout"] = "none";
-					document.getElementsByTagName("body")[0].style["-webkit-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-khtml-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-moz-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-ms-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["-user-select"] = "none";
-					document.getElementsByTagName("body")[0].style["cursor"] = "n-resize";
-				}, false);
-				
-				
-				
-				this.Debug("connecting to " + server, 'client');
-			}
-		}
+	  
+	  	// tell debug the connection is connecting
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Connecting(server);
     },
 	
 	Channels: function(props)
@@ -492,7 +350,7 @@
 		// we need to check and remove the heartbeat timeouts
 		if(this.heart.beat != -1 && !this.heart.busy)
 		{
-			// clear the heartbeat and rebuild the pacemaker
+			// clear the heartbeat and rebuild the pacemaker timeout
 			clearTimeout(this.heart.pacemaker);
 	
 			var that = this;
@@ -502,18 +360,19 @@
 				that._Send("lub");
 			}, that.heart.beat);
 		}
-	
-		if (this.settings.DebugMode)
 		
-			this.Debug((data != 'lub') ? vkbeautify.json(data) : 'lub <3', 'client');
+		// send to debug is enabled, vkbeautify if available as well
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Log('client', (data != 'lub' && window.vkbeautify) ? vkbeautify.json(data) : data);
 	},
 
 	Stop: function()
 	{
 		this._socket.close();
 	
-		if (this.settings.DebugMode)
-		  this.Debug('Closed connection.', 'client');
+		// tell debug the connection is closed
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Closed();
 	},
 
     Connected: function() { },
@@ -524,8 +383,13 @@
       var instance = this;
       this.SocketState = WS3VWebSocket.prototype.SocketStates.Open;
 
-      if (this.settings.DebugMode)
-		  this.Debug('Connected.', 'client');
+      	// tell debug the connection is open
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Open('ws://' + this.settings.Server + ':' + this.settings.Port + '/' + this.settings.Action);
+			
+		// reset rety count
+		this.retries_left = this.settings.Retries;
+		this.reconnect = 0;
     },
 
     _OnMessage: function(event)
@@ -554,11 +418,12 @@
 					}, that.heart.beat);
 				}
 				
-				// show debug output
-				if (this.settings.DebugMode)
+				
+				// send to debug is enabled, send latency as well
+				if (window.WS3VWebSocketDebug)
 				{
-		  			this.Debug('dub <3', 'server');
-					this.Debug('[ws3v diagnostics -> connection latency: ' + this.latency + 'ms]', 'client');
+					WS3VWebSocketDebug.Log('server', 'dub');
+					WS3VWebSocketDebug.Latency(this.latency);
 				}
 			}
 			
@@ -566,8 +431,10 @@
 			return;
 		}
 
-      if (this.settings.DebugMode)
-		  this.Debug(vkbeautify.json(event.data), 'server');
+
+		// send to debug is enabled, vkbeautify if available as well
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Log('server', (window.vkbeautify) ? vkbeautify.json(event.data) : event.data);
 		
 		// extract the data and parse the JSON
 		var data = JSON.parse(event.data);
@@ -730,29 +597,20 @@
 			  
 		}
     },
+	/// clean close run this ->
+	
+				// unsubscribe from all subscriptions
+	//		for (var i = 0, len = this.subscriptions; i < len; i++)
+			
+				// unsubscribe from each
+	//			this.Unsubscribe(this.subscriptions[i].uri);
 
-	_OnClose: function()
+	_OnClose: function(e)
 	{
-		// make sure we didnt close already
-		if(this.closed)
-			return;
-		
-		// set close flag
-		this.closed = true;
-		
-		// unsubscribe from all subscriptions
-		for (var i = 0, len = this.subscriptions; i < len; i++)
-		
-			// unsubscribe from each
-			this.Unsubscribe(this.subscriptions[i].uri);
-		
-		if (this.settings.DebugMode)
-			this.Debug('Connection closed.', 'client');
-
-		// set socket state and fire disconnect callback
-		this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
-		this.Disconnected();
-	  
+		// tell debug the connection is closed
+		if (window.WS3VWebSocketDebug)
+			WS3VWebSocketDebug.Closed();
+			
 		// we need to check and remove the heartbeat intervals
 		if(this.heart.beat != -1)
 		{
@@ -763,14 +621,50 @@
 			else
 				clearTimeout(this.heart.pacemaker);
 		}
-    },
-	
-	// debug function, output pretty server and client logs
-	Debug: function(message, location)
-	{ 
-		if (this.settings.DebugMode)
-			document.getElementById("ws3vdebug" + location).innerHTML = "<pre><code>" + message + "</code></pre>" + document.getElementById("ws3vdebug" + location).innerHTML;
-	}
+		
+		this.authenticated = false;
+		this.heart = { beat: -1, busy: false, lub: null, pacemaker: null };
+				
+		// check if close was unclean
+		if(e != "undefined" && !e.wasClean && --this.retries_left > 0)
+		{
+			// calculate a random exponential backoff
+			this.reconnect = Math.floor(Math.random()*(Math.pow(2, (this.settings.Retries - this.retries_left)))+this.reconnect);
+			
+			// min of 2 seconds
+            this.reconnect = (this.reconnect < 2) ? 2 : this.reconnect;
+			
+			// max of 3 min
+			this.reconnect = (this.reconnect > 180) ? 180 : this.reconnect;
+			
+			// tell debug the connection is closed
+			if (window.WS3VWebSocketDebug)
+				WS3VWebSocketDebug.Timeout(this.reconnect);
+			
+			var that = this;
+
+			// set the time before connect
+			setTimeout(function() { that.Connect(); }, that.reconnect * 1000);
+			
+			// leave method
+			return;
+		}
+		
+		// given up on retry or it was set for none
+		else
+		{
+			// make sure we didnt close already
+			if(this.closed)
+				return;
+			
+			// set close flag
+			this.closed = true;
+			
+			// set socket state and fire disconnect callback
+			this.SocketState = WS3VWebSocket.prototype.SocketStates.Closed;
+			this.Disconnected();
+		}
+    }
   };
   
 	
@@ -817,7 +711,7 @@
 	// attach these objects to the window
 	window.WS3VWebSocket = WS3VWebSocket;
 	
-	// oh firefox, way to pull an ie.. no wonder people don't like you anymore
+	// oh firefox....
 	if(window.MozWebSocket)
 		window.WebSocket = MozWebSocket;
 
