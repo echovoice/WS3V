@@ -1,8 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<serviceContract xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" dslVersion="1.0.0.0" name="Azure_Cloud_DemosContract" xmlns="http://schemas.microsoft.com/dsltools/Contracts">
-  <elements>
-    <interface name="Demo:Endpoint1" url="tcp://*:8181" />
-    <interface name="Demo:Endpoint2" url="tcp://*:8182" />
-    <interface name="Demo:Web" url="http://*:80" />
-  </elements>
-</serviceContract>
