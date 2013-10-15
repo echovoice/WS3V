@@ -95,23 +95,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\Client-side\JS\Samples\Chat Room Sample\client.html">
-      <Link>Samples\Chat Room Sample\client.html</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\Client-Side\JS\Submodules\vkBeautify\vkbeautify.js">
-      <Link>Submodules\vkBeautify\vkbeautify.js</Link>
-    </Content>
-    <Content Include="..\..\Client-Side\JS\WS3V\debug-assets\websocket-debug.css">
-      <Link>WS3V\debug-assets\websocket-debug.css</Link>
-    </Content>
-    <Content Include="..\..\Client-Side\JS\WS3V\debug-assets\websocket-debug.js">
-      <Link>WS3V\debug-assets\websocket-debug.js</Link>
-    </Content>
-    <Content Include="..\..\Client-side\JS\WS3V\websocket.js">
-      <Link>WS3V\websocket.js</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="packages.config">
       <SubType>Designer</SubType>
     </Content>
