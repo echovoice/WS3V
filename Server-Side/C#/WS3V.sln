@@ -3,19 +3,35 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS3V", "WS3V\WS3V.csproj", "{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fleck", "Submodules\Fleck\src\Fleck\Fleck.csproj", "{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat Room Sample", "Samples\ChatRoom\Chat Room Sample.csproj", "{290BFDA7-93DB-4C1F-9889-8EF74352C965}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS3V.Tests", "WS3V.Tests\WS3V.Tests.csproj", "{5F4EE748-37E8-40D5-BE9C-7C960E6E2012}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{8328EBB2-D03D-4124-B0E7-8CB428E0BCFD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", "{92C5DAC2-62B9-411B-83EE-F596307A68F0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RESTful Sample", "Samples\RESTful Sample\RESTful Sample.csproj", "{EB2524CC-3188-489C-AF77-40E330B2D4DB}"
 EndProject
 Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 5
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://echovoice.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = WS3V\\WS3V.csproj
+		SccProjectName1 = WS3V
+		SccLocalPath1 = WS3V
+		SccProjectUniqueName2 = Samples\\ChatRoom\\Chat\u0020Room\u0020Sample.csproj
+		SccProjectTopLevelParentUniqueName2 = WS3V.sln
+		SccProjectName2 = Samples/ChatRoom
+		SccLocalPath2 = Samples\\ChatRoom
+		SccProjectUniqueName3 = WS3V.Tests\\WS3V.Tests.csproj
+		SccProjectName3 = WS3V.Tests
+		SccLocalPath3 = WS3V.Tests
+		SccProjectUniqueName4 = Samples\\RESTful\u0020Sample\\RESTful\u0020Sample.csproj
+		SccProjectTopLevelParentUniqueName4 = WS3V.sln
+		SccProjectName4 = Samples/RESTful\u0020Sample
+		SccLocalPath4 = Samples\\RESTful\u0020Sample
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM
@@ -37,16 +53,6 @@ Global
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|ARM.ActiveCfg = Release|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|x64.ActiveCfg = Release|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|x86.ActiveCfg = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|ARM.ActiveCfg = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|x64.ActiveCfg = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|x86.ActiveCfg = Release|Any CPU
 		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{290BFDA7-93DB-4C1F-9889-8EF74352C965}.Debug|ARM.ActiveCfg = Debug|Any CPU
@@ -82,7 +88,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE} = {92C5DAC2-62B9-411B-83EE-F596307A68F0}
 		{290BFDA7-93DB-4C1F-9889-8EF74352C965} = {8328EBB2-D03D-4124-B0E7-8CB428E0BCFD}
 		{EB2524CC-3188-489C-AF77-40E330B2D4DB} = {8328EBB2-D03D-4124-B0E7-8CB428E0BCFD}
 	EndGlobalSection

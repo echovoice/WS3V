@@ -9,11 +9,29 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chat Room Sample", "..\Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RESTful Sample", "..\Server-Side\C#\Samples\RESTful Sample\RESTful Sample.csproj", "{EB2524CC-3188-489C-AF77-40E330B2D4DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fleck", "..\Server-Side\C#\Submodules\Fleck\src\Fleck\Fleck.csproj", "{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WS3V", "..\Server-Side\C#\WS3V\WS3V.csproj", "{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}"
 EndProject
 Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://echovoice.visualstudio.com/defaultcollection
+		SccProjectUniqueName0 = ..\\Server-Side\\C#\\Samples\\ChatRoom\\Chat\u0020Room\u0020Sample.csproj
+		SccProjectName0 = ../Server-Side/C#/Samples/ChatRoom
+		SccAuxPath0 = https://echovoice.visualstudio.com/defaultcollection
+		SccLocalPath0 = ..\\Server-Side\\C#\\Samples\\ChatRoom
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = ..\\Server-Side\\C#\\Samples\\RESTful\u0020Sample\\RESTful\u0020Sample.csproj
+		SccProjectName1 = ../Server-Side/C#/Samples/RESTful\u0020Sample
+		SccAuxPath1 = https://echovoice.visualstudio.com/defaultcollection
+		SccLocalPath1 = ..\\Server-Side\\C#\\Samples\\RESTful\u0020Sample
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = ..\\Server-Side\\C#\\WS3V\\WS3V.csproj
+		SccProjectName2 = ../Server-Side/C#/WS3V
+		SccAuxPath2 = https://echovoice.visualstudio.com/defaultcollection
+		SccLocalPath2 = ..\\Server-Side\\C#\\WS3V
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -35,10 +53,6 @@ Global
 		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EB2524CC-3188-489C-AF77-40E330B2D4DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B12D929-AFA9-4307-BEFF-2ED0F1070FEE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{947D2EEB-2A83-41D1-B8A7-85FFC062FAB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
